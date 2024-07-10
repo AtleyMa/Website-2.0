@@ -1,5 +1,5 @@
 # Ignore .env file
-.env
+config.env
 
 # Ignore Flask session folder
 flask_session/
