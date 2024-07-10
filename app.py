@@ -15,27 +15,31 @@ import stripe
 import boto3
 import mariadb
 import random
+from dotenv import load_dotenv
+import os
+
+load_dotenv(dotenv_path='config.env')
 
 #AWS Clients
-aws_access_key_id = "AKIAXPB7D5VVLHZRJT7K"
-aws_secret_access_key = "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"
-region="us-east-1"
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+region = os.getenv('AWS_REGION')
 sns = boto3.client('sns', aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, region_name=region)
 
-# connection parameters
+# MariaDB connection parameters
 conn_params= {
-    "user" : "root",
-    "password" : "Chewie325",
-    "host" : "localhost",
-    "database" : "sodakid"
+    "user" : os.getenv('DB_USER'),
+    "password" : os.getenv('DB_PASSWORD'),
+    "host" : os.getenv('DB_HOST'),
+    "database" : os.getenv('DB_NAME')
 }
 
 # Establish a db connection
 connection= mariadb.connect(**conn_params)
 c = connection.cursor()
 
-test_sk = 'sk_test_51OZEc2Jn3PNSsZghV8EV5ktx4OhtHkQJC5N9InJcWILAmzBp0ER11FSYWeT2dDslFSKB3O4ku6UGrXkhZbsBS6Ag00vltnRFdZ'
-real_sk = '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'
+test_sk = os.getenv('STRIPE_TEST_SECRET_KEY')
+real_sk = os.getenv('STRIPE_SECRET_KEY')
 
 stripe.api_key = real_sk
 
@@ -43,7 +47,7 @@ app = Flask(__name__, static_folder="static")
 
 app.config['WTF_CSRF_ENABLED'] = False
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SECRET_KEY'] = 'atley'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['DEBUG_TB_PROFILER_ENABLED'] = True
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 #toolbar = DebugToolbarExtension(app)
