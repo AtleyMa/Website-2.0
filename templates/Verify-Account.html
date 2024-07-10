@@ -1,0 +1,48 @@
+{% extends 'layout.html'%}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+Verify your Account
+{% endblock %}
+
+{% block link %}
+<link rel="stylesheet" href="../static/Verify-Account.css">
+{% endblock %}
+
+{% block alert %}
+{% if wrongAccountCode %}
+<div class="row">
+  <div class="alert alert-danger alert-dismissible fade show position-sticky mt-3 w-100 applied-alert" role="alert">
+      <strong>The Code You Entered Was Incorrect</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container" style="height: 63vh;">
+    <div class="d-flex align-items-center justify-content-center h-100">
+        <div class="text-center">
+            <h3 class="mb-1">Please enter the 4-digit verification code we sent via text:</h3>
+            <span>It may take a couple minutes to appear</span>
+            <form class="verification-form mt-3" method="POST" action="/verify-account-form">
+                <input class="border rounded border-dark text-center" id="num1" name="num1" type="number" inputmode="numeric" maxLength="1" size="1" min="0" max="9" style="height: 70px; width: 40px; font-size: xx-large;" pattern="[0-9]{1}" required/>
+                <input class="border rounded border-dark text-center" id="num2" name="num2" type="number" inputmode="numeric" maxLength="1" size="1" min="0" max="9" style="height: 70px; width: 40px; font-size: xx-large;" pattern="[0-9]{1}" required/>
+                <input class="border rounded border-dark text-center" id="num3" name="num3" type="number" inputmode="numeric" maxLength="1" size="1" min="0" max="9" style="height: 70px; width: 40px; font-size: xx-large;" pattern="[0-9]{1}" required/>
+                <input class="border rounded border-dark text-center" id="num4" name="num4" type="number" inputmode="numeric" maxLength="1" size="1" min="0" max="9" style="height: 70px; width: 40px; font-size: xx-large;" pattern="[0-9]{1}" required/>
+                <br>
+                <button type="submit" class="btn btn-primary my-3">Verify</button>
+            </form>
+            
+            Didn't receive the code?
+            <br>
+            <a href="/account-code-again" class="text-decoration-none">Send code again</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="../static/Verify-Account.js"></script>
+{% endblock %}

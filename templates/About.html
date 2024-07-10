@@ -1,0 +1,88 @@
+{% extends 'layout.html'%}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+SodaKid | About
+{% endblock %}
+
+{% block link %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-3 d-block d-lg-none text-center">
+        <img src="../static/Chewie and I.JPG" alt="" class="w-75 rounded">
+    </div>
+    <div class="row mx-2">
+        <div class="col-12 col-lg-7 rounded text-center d-flex align-items-center" style="background-color: rgba(184, 207, 55, 1);">
+            <div>
+                <h1 class="mt-2">About Me</h1>
+                <p style="font-size: larger;">Hello, I am the SodaKid. I offer a Sodastream CO2 canister exchange service at over 50% off of retail prices in stores with $1.00 of every sale going to support the Calgary Food Bank. I started this business at the age of 9 to learn about money and running my own business. Thank you to all of my customers for all of your support and encouragement. It means a lot to me.</p>
+            </div>
+        </div>
+        <div class="d-none col-lg-5 d-lg-flex align-items-center">
+            <div>
+                <img src="../static/Chewie and I.JPG" alt="" class="w-100 rounded">
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row mb-3 d-block d-lg-none text-center">
+        <img src="../static/Canister Swap Image.png" alt="" class="w-75 rounded">
+    </div>
+    <div class="row mx-2">
+        <div class="d-none col-lg-5 d-lg-flex align-items-center">
+            <img src="../static/Canister Swap Image.png" alt="" class="w-100 rounded">
+        </div>
+        <div class=" col-12 col-lg-7 text-center rounded d-flex align-items-center" style="background-color: rgba(135, 204, 217, 1);">
+            <div>
+                <h1 class="mt-2">How it Works</h1>
+                <p style="font-size: larger;">Once you have placed your order, your full canister(s) will be in the mailbox, available for exchange of your empty canister(s) during your selected timeslot. The cost is $10 and $1 is donated to charity for every canister exchanged.</p>
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                    <a href="/place-order"><button type="button" class="btn btn-outline-dark btn-lg px-4 gap-3 btn-light mb-3">Place Order</button></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row mb-3 d-block d-lg-none text-center">
+        <img src="../static/Donation at CBC.jpg" alt="" class="w-75 rounded">
+    </div>
+    <div class="row mx-2">
+        <div class="col-12 col-lg-7 text-center rounded d-flex align-items-center" style="background-color: rgba(184, 207, 55, 1);">
+            <div>
+                <h1 class="mt-2">Donations</h1>
+                <p style="font-size: larger;">SodaKid has made many sizeable donations to the Calgary Food Bank through the CBC's Food Bank Drive since it's inception. SodaKid has donated over $11,300 in 6 years of business. For every $1 donated to the food bank, $5 worth of food goes to those in need. That is $56,500 worth of food! Together we are making a positive impact in our shared community.</p>
+            </div>
+        </div>
+        <div class="d-none col-lg-5 d-lg-flex align-items-center">
+            <img src="../static/Donation at CBC.jpg" alt="" class="w-100 rounded">
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row mb-3 d-block d-lg-none text-center">
+        <img src="../static/Carbon-Neutral-About.jpg" alt="" class="w-50 rounded">
+    </div>
+    <div class="row mx-2">
+        <div class="d-none col-lg-5 d-lg-flex align-items-center justify-content-center">
+            <img src="../static/Carbon-Neutral-About.jpg" alt="" class="w-75 rounded">
+        </div>
+        <div class=" col-12 col-lg-7 text-center rounded d-flex align-items-center" style="background-color: rgba(135, 204, 217, 1);">
+            <div>
+                <h1 class="mt-2">Carbon Neutral</h1>
+                <p style="font-size: larger;">SodaKid has offset it's carbon emmisions from the inception of it's business with a carbon credit project. That's 4 tons of CO<sub>2</sub> to date! When you exchange your canisters with SodaKid, your purchase is carbon neutral. We are one step closer to a net-zero future!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+{% endblock %}

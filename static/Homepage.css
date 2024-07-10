@@ -1,0 +1,25 @@
+.text-banner-sm {
+    font-size: 2rem;
+}
+
+.text-hiw-sm {
+    font-size: 1.5rem;
+}
+
+@media (max-width: 576px) {
+    .text-banner-sm {
+        font-size: 1rem;
+    }
+    .text-hiw-sm {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .text-banner-sm {
+        font-size: 1.5rem;
+    }
+    .text-hiw-sm {
+        font-size: 1.25rem;
+    }
+}

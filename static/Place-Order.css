@@ -1,0 +1,23 @@
+.can-image {
+    width: 10%;
+    height: 10%;
+}
+
+.blue-image {
+    margin-right: 60px;
+}
+
+.pink-image {
+    margin-left: 60px;
+}
+
+@media (max-width: 576px){
+    .can-image {
+        width: 15%;
+        height: 15%;
+    }
+    .dates {
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+}

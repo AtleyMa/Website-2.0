@@ -1,0 +1,83 @@
+{% extends 'layout.html'%}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+SodaKid | Contact
+{% endblock %}
+
+{% block link %}
+{% endblock %}
+
+{% block alert %}
+<div class="row">
+    <div class="alert alert-success alert-dismissible fade show position-fixed mt-3 top-0 d-none end-0 w-25 me-3 sent-alert" role="alert">
+        <strong>Success!</strong> Message Sent.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1 class="text-center">Contact SodaKid</h1>
+<p class="text-center m-0">Send SodaKid a message if you have any questions or issues</p>
+<br>
+<form class="text-center log-form needs-validation" method="POST" action="/contact-submitted" id="contact-form" novalidate>
+    <div class="row">
+        <!-- First Name input -->
+            <div class="form-outline mb-4 col-lg-2 col-10 offset-1 offset-lg-4 col-md-3 offset-md-3">
+                <div class="form-floating">
+                    <input type="text" id="f-name-in" name="f-name-in" class="form-control" placeholder="First Name" pattern="[A-Za-z]+" required>
+                    <div class="invalid-feedback">
+                        Please enter your first name.
+                    </div>
+                    <label class="form-label" for="f-name-in">First name</label>
+                </div>
+            </div>
+
+            <!-- Last Name input -->
+            <div class="form-outline mb-4 col-lg-2 col-10 offset-1 offset-md-0 col-md-3">
+                <div class="form-floating">
+                    <input type="text" name="l-name-in" id="l-name-in" class="form-control" placeholder="Last Name" pattern="[A-Za-z]+" required>
+                    <div class="invalid-feedback">
+                        Please enter your last name.
+                    </div>
+                    <label class="form-label" for="l-name-in">Last name</label>
+                </div>
+            </div>
+        </div>
+    
+        <div class="row">
+            <div class="mb-4 col-lg-4 offset-lg-4 offset-1 offset-md-3 col-md-6 col-10">
+                <div class="form-floating">
+                    <input type="tel" id="phone" name="phone" class="form-control" placeholder="xxxxxxxxxx" pattern="^\d{10}$" required>
+                    <div class="invalid-feedback">
+                        Please enter your mobile number.
+                    </div>
+                    <label class="form-label" for="phone">Mobile Number</label>
+                </div>
+            </div>
+        </div>
+  
+    <!-- Message input -->
+    <div class="row">
+        <div class="col-lg-4 offset-lg-4 offset-1 col-10 col-md-6 offset-md-3">
+            <div class="mb-4">
+                <div class="form-floating">
+                    <textarea id="message" name="message" style="max-height: 200px;" class="form-control" placeholder="message" pattern=".*" required></textarea>
+                    <div class="invalid-feedback">
+                        Please enter your message.
+                    </div>
+                    <label class="form-label" for="message">Message</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit button -->
+    <button type="submit" class="btn btn-block btn-outline-dark mb-4" style="background-color: rgb(184, 207, 55);">Send</button>
+</form>
+{% endblock %}
+
+{% block script %}
+<script src="../static/Contact.js"></script>
+{% endblock %}

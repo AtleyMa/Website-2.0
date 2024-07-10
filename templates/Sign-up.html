@@ -1,0 +1,137 @@
+{% extends 'layout.html'%}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+SodaKid Sign Up
+{% endblock %}
+
+{% block link %}
+<link rel="stylesheet" href="../static/Sign-up.css">
+{% endblock %}
+
+{% block alert %}
+{% if existingEmail %}
+<div class="row">
+  <div class="alert alert-danger alert-dismissible fade show position-sticky mt-3 w-100 applied-alert" role="alert">
+      <strong>The email entered is already associated with an account. <a href="/login">Log In</a> instead?</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+        <div class="row">
+            <div class="col-xs-0 col-lg-4"></div>
+            <div class="col-xs-12 col-lg-4">
+                <img src="../static/Logo-trans.png" class="mx-auto d-block img-fluid mb-4">
+            </div>
+        </div>
+
+        <form class="text-center log-form needs-validation" method="POST" action="/sign-up-form" novalidate>
+            <div class="row">
+            <!-- First Name input -->
+                <div class="form-outline mb-4 col-lg-2 col-xs-12 offset-lg-4 offset-xs-0 pe-1 ps-0">
+                    <div class="form-floating">
+                        <input type="text" id="f-name-in" name="f-name-in" class="form-control" placeholder="First Name" pattern="^([A-Za-z]+[,.]?[ ]?|[A-Za-z]+['-]?)+$" required>
+                        <div class="invalid-feedback">
+                            Please enter your first name.
+                        </div>
+                        <label class="form-label" for="f-name-in">First name</label>
+                    </div>
+                </div>
+
+                <!-- Last Name input -->
+                <div class="form-outline mb-4 col-lg-2 col-xs-12 ps-1 pe-0">
+                    <div class="form-floating">
+                        <input type="text" id="l-name-in" name="l-name-in" class="form-control" placeholder="Last Name" pattern="^([A-Za-z]+[,.]?[ ]?|[A-Za-z]+['-]?)+$" required>
+                        <div class="invalid-feedback">
+                            Please enter your last name.
+                        </div>
+                        <label class="form-label" for="l-name-in">Last name</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email input -->
+            <div class="form-outline mb-4 col-lg-4 col-xs-12 offset-lg-4 offset-xs-0">
+                <div class="form-floating">
+                    <input type="text" id="email-in" name="email-in" class="form-control" placeholder="name@example.com" pattern="^[\w\.\-]+@[a-zA-Z\d\.\-]+\.[a-zA-Z]{2,}$" required>
+                    <div class="invalid-feedback">
+                        Please enter your email address.
+                    </div>
+                    <label class="form-label" for="email-in">Email address</label>
+                </div>
+            </div>
+
+            <!-- Confirm Email input -->
+            <div class="form-outline mb-4 col-lg-4 col-xs-12 offset-lg-4 offset-xs-0">
+                <div class="form-floating">
+                    <input type="text" id="confirm-email" name="confirm-email" class="form-control" placeholder="name@example.com" required>
+                    <div class="invalid-feedback">
+                        Please confirm your email address.
+                    </div>
+                    <label class="form-label" for="email-in">Confirm Email address</label>
+                </div>
+            </div>
+
+            <!-- Mobile Number input -->
+            <div class="form-outline mb-4 col-lg-4 col-xs-12 offset-lg-4 offset-xs-0">
+                <div class="form-floating">
+                    <input type="tel" id="phone" name="phone" class="form-control" placeholder="(xxx) xxx-xxxx" pattern="^\d{10}$" required>
+                    <div class="invalid-feedback">
+                        Please enter a valid mobile number containing only numbers.
+                    </div>
+                    <label class="form-label" for="phone">Mobile Number</label>
+                </div>
+            </div>
+            
+            <!-- Password input -->
+            <div class="form-outline mb-4 col-lg-4 col-xs-12 offset-lg-4 offset-xs-0 position-relative">
+                <div class="form-floating" style="display: flex; flex-direction: column;">
+                    <input type="password" id="pass-in" name="pass-in" class="form-control" placeholder="Password" pattern="(?=.*[A-Za-z])(?=.*\d).{8,}" required>
+                    <div class="invalid-feedback">
+                        Please enter a valid new password.
+                    </div>
+                    <label class="form-label" for="pass-in">Create Password</label>
+                    <button class="btn toggle-password position-absolute" style="right: 20px; transform: translateY(30%);" onmousedown="return false;" id="togglePassword1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-slash-fill" viewBox="0 0 16 16">
+                        <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7 7 0 0 0 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474z"/>
+                        <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z"/>
+                      </svg></button>
+                </div>
+                <div id="passwordHelpBlock" class="form-text">
+                    Your password must be at least 8 characters long, contain letters, numbers and must not contain spaces or emojis.
+                </div>
+            </div>
+
+            <div class="form-outline mb-4 col-lg-4 col-xs-12 offset-lg-4 offset-xs-0 position-relative">
+                <div class="form-floating" style="display: flex; flex-direction: column;">
+                    <input type="password" id="pass-confirm" class="form-control" placeholder="Password" required>
+                    <div class="invalid-feedback">
+                        Please confirm your new password
+                    </div>
+                    <label class="form-label" for="pass-in">Confirm Password</label>
+                    <button class="btn toggle-password position-absolute" style="right: 20px; transform: translateY(30%);" onmousedown="return false;" id="togglePassword2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-slash-fill" viewBox="0 0 16 16">
+                        <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7 7 0 0 0 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474z"/>
+                        <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z"/>
+                      </svg></button>
+                </div>
+            </div>
+            
+            
+            <!-- Submit button -->
+            <button type="submit" class="btn btn-primary btn-block mb-4">Sign Up</button>
+            
+            <!-- Register buttons -->
+            <div class="text-center">
+                <p>Already have an account? <a href="/login" class="text-decoration-none">Login</a></p>
+            </div>
+            </form>
+
+    </div>
+{% endblock %}
+
+{% block script %}
+<script src="../static/Sign-Up.js"></script>
+{% endblock %}

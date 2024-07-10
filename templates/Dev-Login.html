@@ -1,0 +1,54 @@
+{% extends 'layout.html'%}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+Dev Login
+{% endblock %}
+
+{% block alert %}
+{% if badLogin %}
+<div class="row">
+  <div class="alert alert-danger alert-dismissible fade show position-sticky mt-3 w-100 applied-alert" role="alert">
+      <strong>Incorrect Password</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row">
+      <div class="col-xs-0 col-lg-4"></div>
+      <div class="col-xs-12 col-lg-4">
+          <img src="../static/Logo-trans.png" class="mx-auto d-block img-fluid mb-4">
+      </div>
+  </div>
+  <div class="row">
+      <div class="col-xs-0 col-md-4"></div>
+      <form class="text-center log-form col-lg-4 col-xs-12 needs-validation" method="POST" action="/dev-login-form" novalidate>
+        
+          <!-- Password input -->
+          <div class="form-outline mb-4">
+              <div class="form-floating">
+                  <input type="password" id="pass" name="pass" class="form-control" placeholder="Password" pattern="(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,20}" required>
+                  <div class="invalid-feedback">
+                    Please enter a valid password.
+                  </div>
+                  <label class="form-label" for="pass">Password</label>
+              </div>
+              <div id="passwordHelpBlock" class="form-text">
+                  Your password must be 8-20 characters long, contain letters, numbers, at least one special character, must not contain spaces or emojis.
+              </div>
+          </div>
+        
+          <!-- Submit button -->
+          <button type="submit" class="btn btn-primary btn-block mb-4">Login</button>
+        </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="../static/Login.js"></script>
+{% endblock %}

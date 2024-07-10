@@ -1,0 +1,216 @@
+{% extends 'layout.html'%}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+SodaKid | Place Order
+{% endblock %}
+
+{% block link %}
+<link rel="stylesheet" href="../static/Place-Order.css">
+{% endblock %}
+
+{% block content %}
+<div class="blue-pink">
+    <div class="d-flex align-items-center justify-content-center h-100">
+      <div class="text-center">
+        <h2 class="text-center">Which type of canister would you like to exchange?</h2>
+        <h6 class="mt-2">Canisters must exchanged like for like (blue for blue or pink for pink)</h6>
+        <br>
+        <form class="text-center" id="can-type-form" method="POST" action="/can-type">
+          <div class="row">
+            <div class="form">
+              <input type="submit" class="btn btn-outline-dark btn-lg submit-blue me-3" name="can-type" style="background-color: rgb(4, 128, 222);" value="Blue (Original)">
+              <input type="submit" class="btn btn-outline-dark btn-lg submit-pink ms-3" name="can-type" style="background-color: rgb(235, 5, 140);" value="Pink (Terra)">
+            </div>
+          </div>
+          <div class="row justify-content-center">
+            <input type="image" src="../static/blue-canister.png" class="mt-3 blue-image submit-blue can-image" alt="Submit"> 
+            <input type="image" src="../static/pink-canister.png" class="mt-3 pink-image submit-pink can-image" alt="Submit"> 
+            <input type="hidden" id="hidden" name="can-type" value="">
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<div class="how-many" style="display: none; height: 63vh;">
+    <div class="d-flex align-items-center justify-content-center h-100">
+        <div class="text-center">
+        <h2 class="text-center">How many canisters would you like to exchange?</h2>
+        <br>
+        <h6 id="num-cans-help">Please select a value between 1 and {{blueMax}}</h6>
+        <br>
+        <form class="text-center" id="num-cans-form" method="POST" action="/num-cans">
+            <div class="row">
+                <div class="col-6 offset-3 col-md-4 offset-md-4">
+                    <div class="form-floating text-center">
+                        <input type="number" class="form-control" id="num-cans" name="num-cans" placeholder="#" min="1" max={{blueMax}}>
+                        <label for="num-cans">Number of canisters</label>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <input type="submit" class="btn btn-outline-dark submit-1" style="background-color: rgb(184, 207, 55);" value="Next">
+        </form>
+        </div>
+    </div>
+</div>
+
+<div class="calendar container" style="display: none;">
+    <div class="row mb-2">
+        <div class="col-7 p-2 ps-3">
+            <h1 class="m-0" id="month+year">{{months[m]}}, {{y}}</h1>
+        </div>
+        <div class="col-4 p-0 text-end py-3 pe-3 offset-1">
+            <button type="button" class="border border-dark rounded align-middle" id="prev-month-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+              </svg></button>
+            <button type="button" class="border border-dark rounded align-middle" id="nxt-month-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+              </svg></button>
+        </div >
+    </div>
+    <div class="row">
+        <p class="ps-3 col-12">Click on a date to a book a time to exchange your canister(s).</p>
+    </div>
+    <div id="dates">
+        <div class="row px-2">
+            {% for d in days %}
+            <div class="col text-center border border-secondary dates" style="background-color: rgb(135, 204, 217);">
+                <h5>{{ d }}</h5>
+            </div>
+            {% endfor %}
+        </div>
+        {% set count = namespace(value=-d1 + 1) %}
+        {% set after = namespace(value=0) %}
+        {% for i in range(5) %}
+        <div class="row px-2">
+            {% for z in range(7) %}
+            {% if (count.value - date == 0) and (current_time < 22) %}
+            <div class="col text-end border border-secondary today day m-0 p-0" data-bs-toggle="modal" data-bs-target="#day-modal" style="background-color: rgba(184, 207, 55, 0.4); min-height: 100px;">
+            {% elif (count.value - date == 0) and (current_time > 21) %}
+            <div class="col text-end border border-secondary today late day m-0 p-0" data-bs-toggle="modal" data-bs-target="#Wrong-Time" style="background-color: rgba(184, 207, 55, 0.4); min-height: 100px;">    
+            {% elif count.value > dim[m] or count.value < date %}
+            <div class="col text-end border border-secondary unclickable day m-0 p-0" style="background-color: rgba(0, 0, 0, 0.1); min-height: 100px;">
+            {% else %}
+            <div class="col text-end border border-secondary day m-0 p-0" data-bs-toggle="modal" data-bs-target="#day-modal" style="min-height: 100px;">
+            {% endif %}
+            <h5 class="pe-2">
+                {% if z == d1 and i == 0 %}
+                {{ count.value }}
+                {% set after.value = 1 %}
+                {% endif %}
+                {% if after.value == 1 and z != d1 or i != 0 %}
+                    {% if count.value < dim[m] + 1 %}
+                    {{ count.value }}
+                    {% endif %}
+                {% endif %}
+                {% set count.value = count.value + 1 %}
+            </h5>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="day-modal">
+    <div class="modal fade" id="day-modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-title">Place Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Click on a time block to schedule a canister exchange:</p>
+                <div class="mb-2" style="display: inline-block;">
+                    <div class="rounded border border-dark" style="background-color: rgba(184, 207, 55, 0.4); width:15px; height:15px; display: inline-block;"></div>
+                    <div class="" style="display: inline-block;">Available</div>
+                    <div class="ms-4 rounded border border-dark" style="display: inline-block; background-color: rgba(0, 0, 0, 0.1); width:15px; height:15px;"></div>
+                    <div style="display: inline-block;">Booked</div>
+                </div>
+                {% for i in range(7,22) %}
+                <div class="row">
+                    <div class="col-2 border border-top text-end px-1" style="border: solid rgba(0, 0, 0, 0.1); font-size: 12px;">
+                        {% if i > 12 %}
+                        {{i-12}} PM
+                        {% elif i == 12 %}
+                        {{i}} PM
+                        {% else %}
+                        {{i}} AM
+                        {% endif %}
+                    </div>
+                    {% if i == 7 %}
+                    <a href="/create-checkout-session/a/" class="col-10 border-start border-end border-top border-dark rounded-top" style="height: 30px; background-color: rgba(184, 207, 55, 0.4);"></a>
+                    {% elif i < 17 %}
+                    <a href="/create-checkout-session/a/" class="col-10 border-start border-end border-dark" style="height: 30px; background-color: rgba(184, 207, 55, 0.4);"></a>
+                    {% elif i == 17 %}
+                    <a href="/create-checkout-session/a/" class="col-10 border-start border-end border-bottom border-dark rounded-bottom" style="height: 30px; background-color: rgba(184, 207, 55, 0.4);"></a>
+                    {% elif i == 18 %}
+                    <a href="/create-checkout-session/p/" class="col-10 border-start border-end border-dark border-top rounded-top" style="height: 30px; background-color: rgba(184, 207, 55, 0.4);"></a>
+                    {% elif i < 21 %}
+                    <a href="/create-checkout-session/p/" class="col-10 border-start border-end border-dark" style="height: 30px; background-color: rgba(184, 207, 55, 0.4);"></a>
+                    {% elif i == 21 %}
+                    <a href="/create-checkout-session/p/" class="col-10 border-start border-end border-bottom border-dark rounded-bottom" style="height: 30px; background-color: rgba(184, 207, 55, 0.4);"></a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            </div>
+        </div>
+        </div>
+</div>
+
+<!--
+<div class="modal fade" id="day-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center justify-content-center">
+            <div class="modal-body">
+                <b>Would you like to proceed to checkout?</b>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <form action="/create-checkout-session" method="POST">
+                    <button type="submit" id="checkout-button" class="btn justify-content-end" style="background-color: rgb(184, 207, 55);">Checkout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+-->
+
+<!-- Time Modal -->
+<div class="modal fade" id="Wrong-Time" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+        <div class="modal-body">
+            You can't exchange any canister(s) after 9:00 PM.
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    let month = "{{m}}";
+    let m = "{{m}}"
+    let year = "{{y}}";
+    let y = "{{y}}";
+    let daysOfWeek = JSON.parse("{{days_of_week | tojson}}")
+    let monthsJson = JSON.parse('{{months | tojson}}');
+    let time = "{{current_time}}";
+    let availabilityByDayABlue = JSON.parse('{{availability_by_day_a_blue | tojson | safe}}');
+    let availabilityByDayPBlue = JSON.parse('{{availability_by_day_p_blue | tojson | safe}}');
+    let availabilityByDayAPink = JSON.parse('{{availability_by_day_a_pink | tojson | safe}}');
+    let availabilityByDayPPink = JSON.parse('{{availability_by_day_p_pink | tojson | safe}}');
+    let currentTime = "{{current_time}}";
+    let blueMax = "{{blueMax}}";
+    let pinkMax = "{{pinkMax}}";
+</script>
+<script src="../static/Place-Order.js"></script>
+{% endblock %}

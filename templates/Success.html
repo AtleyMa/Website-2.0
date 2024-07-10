@@ -1,0 +1,30 @@
+{% extends 'layout.html'%}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+Order Success
+{% endblock %}
+
+{% block link %}
+{% endblock %}
+
+{% block content %}
+<div class="container" style="height: 63vh;">
+    <div class="d-flex align-items-center justify-content-center h-100">
+        <div class="text-center">
+            <h1>Your order has been recieved!</h1>
+            <br>
+            <h3>We have sent you a text confirmation.</h3>
+            {% if time == "a" %}
+            <h6>Please arrive at 2005 29 Ave SW between 7:00am and 5:00pm on <b>{{order_date}}</b>.</h6>
+            {% else %}
+            <h6>Please arrive at 2005 29 Ave SW between 5:00am and 9:00pm on <b>{{order_date}}</b>.</h6>
+            {% endif %}
+            <h6>Instructions: Please take upside down (full) canisters and leave your empty canisters right side up. Instructions are in the mailbox.</h6>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+{% endblock %}

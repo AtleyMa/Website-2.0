@@ -1,0 +1,175 @@
+{% extends 'layout.html'%}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+Dev
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex align-items-center justify-content-center h-100">
+        <div class="text-center">
+            <h1>Customers</h1>
+            <table class="table table-hover table-light table-bordered display" id="customers">
+                <thead>
+                    <tr>
+                        <th scope="col">Customer ID</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Phone</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Password</th>
+                        <th scope="col">Created At</th>
+                        <th scope="col">Stripe ID</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider border-top-dark">
+                    {% for c in customers %}
+                            <tr>
+                                <td>{{c[0]}}</td>
+                                <td>{{c[1]}} {{c[2]}}</td>
+                                <td>{{c[3]}}</td>
+                                <td>{{c[4]}}</td>
+                                <td>{{c[5]}}</td>
+                                <td>{{c[6]}}</td>
+                                <td>{{c[7]}}</td>
+                            </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <br>
+            <h1>Exchanges</h1>
+            <table class="table table-hover table-light table-bordered display" id="exchanges">
+                <thead>
+                    <tr>
+                        <th scope="col">Exchange ID</th>
+                        <th scope="col">Customer ID</th>
+                        <th scope="col">Datetime</th>
+                        <th scope="col">Date of Exchange</th>
+                        <th scope="col">Time of Exchange</th>
+                        <th scope="col"># Cans</th>
+                        <th scope="col">Canister Type</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider border-top-dark">
+                    {% for e in exchanges %}
+                            <tr>
+                                <td>{{e[0]}}</td>
+                                <td>{{e[1]}}</td>
+                                <td>{{e[2]}}</td>
+                                <td>{{e[3]}}</td>
+                                <td>{{e[4]}}</td>
+                                <td>{{e[5]}}</td>
+                                <td>{{e[6]}}</td>
+                            </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <br>
+            <h1>Messages</h1>
+            <table class="table table-hover table-light table-bordered display" id="messages">
+                <thead>
+                    <tr>
+                        <th scope="col">Message ID</th>
+                        <th scope="col">Datetime</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Phone</th>
+                        <th scope="col">Message</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider border-top-dark">
+                    {% for m in messages %}
+                            <tr>
+                                <td>{{m[0]}}</td>
+                                <td>{{m[1]}}</td>
+                                <td>{{m[2]}} {{m[3]}}</td>
+                                <td>{{m[4]}}</td>
+                                <td>{{m[5]}}</td>
+                            </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <br>
+            <h1>Sent Messages (SMS)</h1>
+            <table class="table table-hover table-light table-bordered display" id="sent_messages">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Datetime</th>
+                        <th scope="col">Content</th>
+                        <th scope="col">Phone</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider border-top-dark">
+                    {% for s in sent_messages %}
+                            <tr>
+                                <td>{{s[0]}}</td>
+                                <td>{{s[1]}}</td>
+                                <td>{{s[2]}}</td>
+                                <td>{{s[3]}}</td>
+                            </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <br>
+            <h1>Payments</h1>
+            <table class="table table-hover table-light table-bordered display" id="payments">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Datetime</th>
+                        <th scope="col">Customer ID</th>
+                        <th scope="col">Exchange ID</th>
+                        <th scope="col">Can Type</th>
+                        <th scope="col">Num Cans</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider border-top-dark">
+                    {% for p in payments %}
+                            <tr>
+                                <td>{{p[0]}}</td>
+                                <td>{{p[1]}}</td>
+                                <td>{{p[2]}}</td>
+                                <td>{{p[3]}}</td>
+                                <td>{{p[4]}}</td>
+                                <td>{{p[5]}}</td>
+                            </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <br>
+            <h1>App Visited</h1>
+            <table class="table table-hover table-light table-bordered display" id="app_visited">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Datetime</th>
+                        <th scope="col">Cookie</th>
+                    </tr>
+                </thead>
+                <tbody class="table-group-divider border-top-dark">
+                    {% for a in app_visited %}
+                            <tr>
+                                <td>{{a[0]}}</td>
+                                <td>{{a[1]}}</td>
+                                <td>{{a[2]}}</td>
+                            </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready( function () {
+      $('#customers').DataTable();
+      $('#exchanges').DataTable();
+      $('#messages').DataTable();
+      $('#sent_messages').DataTable();
+      $('#payments').DataTable();
+      $('#app_visited').DataTable();
+  } );
+</script>
+{% endblock %}

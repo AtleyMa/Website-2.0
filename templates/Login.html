@@ -1,0 +1,89 @@
+{% extends 'layout.html'%}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+SodaKid Login
+{% endblock %}
+
+{% block link %}
+<link rel="stylesheet" href="../static/Login.css">
+{% endblock %}
+
+{% block alert %}
+{% if badLogin %}
+<div class="row">
+  <div class="alert alert-danger alert-dismissible fade show position-sticky mt-3 w-100 applied-alert" role="alert">
+      <strong>Incorrect Email or Password</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+</div>
+{% endif %}
+
+{% if please_login_alert %}
+<div class="row">
+  <div class="alert alert-warning alert-dismissible fade show position-sticky mt-3 w-100 applied-alert" role="alert">
+      <strong>Please Login Before Placing an Order</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row">
+      <div class="col-xs-0 col-lg-4"></div>
+      <div class="col-xs-12 col-lg-4">
+          <img src="../static/Logo-trans.png" class="mx-auto d-block img-fluid mb-4">
+      </div>
+  </div>
+  <div class="row">
+      <div class="col-xs-0 col-md-4"></div>
+      <form class="text-center log-form col-lg-4 col-xs-12 needs-validation" id="form" method="POST" action="/login-form" novalidate>
+          <!-- Email input -->
+          <div class="form-outline mb-3">
+              <div class="form-floating">
+                  <input type="email" id="email" name="email" class="form-control" placeholder="name@example.com" required>
+                  <div class="invalid-feedback">
+                    Please enter a valid email address.
+                  </div>
+                  <label class="form-label" for="email">Email address</label>
+              </div>
+          </div>
+        
+          <!-- Password input -->
+          <div class="form-outline mb-3 position-relative">
+              <div class="form-floating" style="display: flex; flex-direction: column;">
+                  <input type="password" id="pass" name="pass" class="form-control" placeholder="Password" required>
+                  <div class="invalid-feedback">
+                    Please enter a valid password.
+                  </div>
+                  <label class="form-label" for="pass">Password </label>
+                  <button class="btn toggle-password position-absolute" style="right: 15px; transform: translateY(30%);" onmousedown="return false;" id="togglePassword"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye-slash-fill" viewBox="0 0 16 16">
+                    <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7 7 0 0 0 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474z"/>
+                    <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z"/>
+                  </svg></button>
+              </div>
+          </div>
+        
+          <div class="row mb-4">
+            <div class="col">
+              <a href="/forgot-password" class="text-decoration-none">Forgot password?</a>
+            </div>
+          </div>
+        
+          <!-- Submit button -->
+          <button type="submit" class="btn btn-primary btn-block mb-4">Login</button>
+        
+          <!-- Register button -->
+          <div class="text-center">
+            <p>Don't have an account? <a href="/sign-up" class="text-decoration-none">Sign up</a></p>
+          </div>
+        </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="../static/Login.js"></script>
+{% endblock %}

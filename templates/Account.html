@@ -1,0 +1,67 @@
+{% extends 'layout.html'%}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+SodaKid | Account Info
+{% endblock %}
+
+{% block link %}
+<link rel="stylesheet" href="../static/Account.css">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex align-items-center justify-content-center text-center h-100">
+        {% if loggedIn or signedUp %}
+        <div class="row border border-secondary rounded bg-body m-2">
+            <div class="col-12 col-lg-5">
+                <h2 class="mx-3 mb-3 mt-2">Account Information</h2>
+                <p class="mx-3 mb-3" style="font-size: large;">Name: {{f_name}} {{l_name}}</p>
+                <p class="mx-3 mb-3" style="font-size: large;">Email: {{email}}</p>
+                <p class="mx-3 mb-3" style="font-size: large;">Mobile Number: {{phone}}</p>
+                <p class="d-inline ms-3" style="font-size: large;">Password:</p><p class="mx-3 mb-3 d-inline" style="font-size: large; -webkit-text-security: disc;">{{password}}</p>
+                <br>
+            </div>
+
+            <hr class="d-block d-lg-none my-2">
+
+            <div class="col-12 col-lg-6 offset-lg-1 offset-0 text-center justify-content-center">
+                <h2 class="my-3">Recent Orders</h2>
+                {% if previous_exchanges %}
+                    <table class="table table-striped table-hover table-bordered mx-1 rounded">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="p-1">Date</th>
+                            <th scope="col" class="p-1">Time</th>
+                            <th scope="col" class="p-1"># of Canisters</th>
+                            <th scope="col" class="p-1">Canister Type</th>
+                        </tr>
+                        </thead>
+                        <tbody class="">
+                            {% for exchange in previous_exchanges %}
+                            <tr>
+                                <th scope="row">{{exchange[0]}}</th>
+                                <td>{{exchange[1]}}</td>
+                                <td>{{exchange[2]}}</td>
+                                <td>{{exchange[3]}}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                <h5>No recent exchanges to show. Looks like your a brand new customer!</h5>
+                {% endif %}
+            </div>
+            <div class="text-center mt-2">
+                <a href="/log-out"><button class="btn btn-dark m-3" style="font-size: large;">Log Out</button></a>
+            </div>
+        </div>
+        {% else %}
+        <h2>Please Log In or Sign Up to view your Account Information</h2>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+{% endblock %}
