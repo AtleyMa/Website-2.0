@@ -17,6 +17,8 @@ import mariadb
 import random
 from dotenv import load_dotenv
 import os
+import re
+import html
 
 load_dotenv(dotenv_path='config.env')
 
@@ -141,6 +143,17 @@ def about():
     logged_in = session.get('logged_in')
     return render_template("About.html", loggedIn=logged_in, f_name=f_name, l_name=l_name)
 
+def is_valid_name(name):
+    pattern = re.compile(r"^[a-zA-Z\-]+$")
+    return pattern.match(name) is not None
+
+def is_valid_phone(phone):
+    pattern = re.compile(r"^\d{7,15}$")
+    return pattern.match(phone) is not None
+
+def sanitize_message(message):
+    return html.escape(message)
+
 # Contact me page
 @app.route("/contact", methods=["GET", "POST"])
 def contact():
@@ -161,17 +174,24 @@ def contact_submitted():
     phone = request.form.get("phone")
     message = request.form.get("message")
 
-    # Establish a db connection
-    connection= mariadb.connect(**conn_params)
-    c = connection.cursor()
-    data = (f_name, l_name, phone, message)
-    c.execute("INSERT INTO messages (f_name, l_name, phone, message) VALUES (%s, %s, %s, %s)", data)
-    connection.commit()
-    c.close()
-    connection.close()
-    m = "FROM: " + f_name + " " + l_name + "\nPHONE: " + phone + "\n" + message
-    sns.publish(PhoneNumber="+14038897632", Message=m)
-    sent_messages(m, "4038897632")
+    # Validate inputs
+    if not (is_valid_name(f_name) and is_valid_name(l_name) and is_valid_phone(phone)):
+        return "Invalid input", 400
+    else:
+        # Sanitize message
+        sanitized_message = sanitize_message(message)
+
+        # Establish a db connection
+        connection= mariadb.connect(**conn_params)
+        c = connection.cursor()
+        data = (f_name, l_name, phone, sanitized_message)
+        c.execute("INSERT INTO messages (f_name, l_name, phone, message) VALUES (%s, %s, %s, %s)", data)
+        connection.commit()
+        c.close()
+        connection.close()
+        m = f"FROM: {f_name} {l_name}\nPHONE: {phone}\n{sanitized_message}"    
+        sns.publish(PhoneNumber="+14038897632", Message=m)
+        sent_messages(m, "4038897632")
     return "contact submitted"
 
 # Forgot Password Page
@@ -432,7 +452,7 @@ def placeOrder():
             weekday += 1
         current_time = int(datetime.now().strftime("%H"))
         session['referrer'] = ""
-        blueMax = 12
+        blueMax = 18
         pinkMax = 4
         # Establish a db connection
         connection= mariadb.connect(**conn_params)
@@ -572,4 +592,4 @@ def create_checkout_session(t, d):
 if __name__ == "__main__":
     c.close()
     connection.close()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)

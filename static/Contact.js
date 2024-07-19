@@ -24,9 +24,6 @@ Array.from(forms).forEach(form => {
                 // Handle the server response here (e.g., display a success message).
                 console.log(response);
 
-                // Clear the input fields and reset the form.
-                //f.trigger("reset");
-
                 // Show the success alert.
                 $(".sent-alert").removeClass("d-none");
 

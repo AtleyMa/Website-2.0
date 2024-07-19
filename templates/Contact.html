@@ -26,7 +26,7 @@ SodaKid | Contact
         <!-- First Name input -->
             <div class="form-outline mb-4 col-lg-2 col-10 offset-1 offset-lg-4 col-md-3 offset-md-3">
                 <div class="form-floating">
-                    <input type="text" id="f-name-in" name="f-name-in" class="form-control" placeholder="First Name" pattern="[A-Za-z]+" required>
+                    <input type="text" id="f-name-in" name="f-name-in" class="form-control" placeholder="" pattern="^[a-zA-Z\-]+$" required>
                     <div class="invalid-feedback">
                         Please enter your first name.
                     </div>
@@ -37,7 +37,7 @@ SodaKid | Contact
             <!-- Last Name input -->
             <div class="form-outline mb-4 col-lg-2 col-10 offset-1 offset-md-0 col-md-3">
                 <div class="form-floating">
-                    <input type="text" name="l-name-in" id="l-name-in" class="form-control" placeholder="Last Name" pattern="[A-Za-z]+" required>
+                    <input type="text" name="l-name-in" id="l-name-in" class="form-control" placeholder="" pattern="^[a-zA-Z\-]+$" required>
                     <div class="invalid-feedback">
                         Please enter your last name.
                     </div>
@@ -49,7 +49,7 @@ SodaKid | Contact
         <div class="row">
             <div class="mb-4 col-lg-4 offset-lg-4 offset-1 offset-md-3 col-md-6 col-10">
                 <div class="form-floating">
-                    <input type="tel" id="phone" name="phone" class="form-control" placeholder="xxxxxxxxxx" pattern="^\d{10}$" required>
+                    <input type="tel" id="phone" name="phone" class="form-control" placeholder="" pattern="^\d{7,15}$" required>
                     <div class="invalid-feedback">
                         Please enter your mobile number.
                     </div>
@@ -63,7 +63,7 @@ SodaKid | Contact
         <div class="col-lg-4 offset-lg-4 offset-1 col-10 col-md-6 offset-md-3">
             <div class="mb-4">
                 <div class="form-floating">
-                    <textarea id="message" name="message" style="max-height: 200px;" class="form-control" placeholder="message" pattern=".*" required></textarea>
+                    <textarea id="message" name="message" style="max-height: 200px;" class="form-control" placeholder="" pattern=".*" required></textarea>
                     <div class="invalid-feedback">
                         Please enter your message.
                     </div>

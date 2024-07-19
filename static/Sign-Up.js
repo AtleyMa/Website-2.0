@@ -1,31 +1,63 @@
 const forms = document.querySelectorAll('.needs-validation')
-const form = document.getElementsByClassName(".needs-validation")
-var emailInput = document.getElementById('email-in');
-var confirmEmailInput = document.getElementById('confirm-email');
+const emailInput = document.getElementById('email-in');
+const confirmEmailInput = document.getElementById('confirm-email');
 const passInput = document.getElementById('pass-in');
 const confirmPassInput = document.getElementById('pass-confirm');
 
 Array.from(forms).forEach(form => {
-    form.addEventListener('submit', event => {
-      if (!form.checkValidity()) {
-        event.preventDefault()
-        event.stopPropagation()
-      }
-
-      form.classList.add('was-validated');
-      if (confirmEmailInput.value != emailInput.value) {
-        console.log("email dont match")
-          confirmEmailInput.setCustomValidity("Emails don't match");
-      } else {
-          confirmEmailInput.setCustomValidity('');
-      }
-      if (confirmPassInput.value != passInput.value) {
-        confirmPassInput.setCustomValidity("Passwords don't match");
-    } else {
-        confirmPassInput.setCustomValidity('');
+  form.addEventListener('submit', event => {
+    if (confirmEmailInput.value != emailInput.value) {
+      confirmEmailInput.setCustomValidity("Emails don't match");
+    } 
+    else {
+      confirmEmailInput.setCustomValidity('');
     }
-    }, false)
-  })
+    if (confirmPassInput.value != passInput.value) {
+      confirmPassInput.setCustomValidity("Passwords don't match");
+    } 
+    else {
+      confirmPassInput.setCustomValidity('');
+    }
+
+    if (!form.checkValidity()) {
+      event.preventDefault()
+      event.stopPropagation()
+    }
+    form.classList.add('was-validated');
+  }, false)
+
+  emailInput.addEventListener('input', () => {
+    if (confirmEmailInput.value != emailInput.value) {
+      confirmEmailInput.setCustomValidity("Emails don't match");
+    } else {
+      confirmEmailInput.setCustomValidity('');
+    }
+  });
+
+  confirmEmailInput.addEventListener('input', () => {
+    if (confirmEmailInput.value != emailInput.value) {
+      confirmEmailInput.setCustomValidity("Emails don't match");
+    } else {
+      confirmEmailInput.setCustomValidity('');
+    }
+  });
+
+  passInput.addEventListener('input', () => {
+    if (confirmPassInput.value != passInput.value) {
+      confirmPassInput.setCustomValidity("Passwords don't match");
+    } else {
+      confirmPassInput.setCustomValidity('');
+    }
+  });
+
+  confirmPassInput.addEventListener('input', () => {
+    if (confirmPassInput.value != passInput.value) {
+      confirmPassInput.setCustomValidity("Passwords don't match");
+    } else {
+      confirmPassInput.setCustomValidity('');
+    }
+  });
+})
 
   $('#togglePassword1').click(function() {
     event.preventDefault();
