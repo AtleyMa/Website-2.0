@@ -44,8 +44,8 @@ const PlaceOrderPage = () => {
   const [currentMonth, setCurrentMonth] = useState(dayjs())
   const [availability, setAvailability] = useState({})
 
-  const blueMax = 12
-  const pinkMax = 4
+  const blueMax = 24
+  const pinkMax = 8
 
   useEffect(() => {
     // Fetch availability when month changes

@@ -76,14 +76,20 @@ def set_canister_type():
 def set_quantity():
     """Set the quantity for the order"""
     data = request.get_json()
-    quantity = data.get('quantity', type=int)
+    quantity = data.get('quantity')
+    
+    # Convert to int if it's a string or validate if already int
+    try:
+        quantity = int(quantity) if quantity is not None else None
+    except (ValueError, TypeError):
+        return jsonify({'message': 'Invalid quantity format'}), 400
     
     if not quantity or quantity < 1:
         return jsonify({'message': 'Invalid quantity'}), 400
     
     # Validate against max limits
     can_type = session.get('can_type', 'Blue (Original)')
-    max_qty = 4 if can_type == 'Pink (Terra)' else 12
+    max_qty = 8 if can_type == 'Pink (Terra)' else 24
     
     if quantity > max_qty:
         return jsonify({'message': f'Maximum {max_qty} canisters allowed'}), 400
