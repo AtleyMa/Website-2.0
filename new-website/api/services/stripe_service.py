@@ -51,6 +51,7 @@ class StripeService:
                 customer=stripe_customer_id,
                 submit_type='pay',
                 billing_address_collection='auto',
+                currency='cad',
                 line_items=[{
                     'price': price_id,
                     'quantity': quantity,

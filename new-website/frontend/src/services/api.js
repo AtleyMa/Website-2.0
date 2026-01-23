@@ -29,10 +29,16 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      // Optionally redirect to login
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
+      // Don't redirect for admin routes or login attempts
+      const isAdminRoute = error.config?.url?.includes('/admin/')
+      const isLoginRoute = error.config?.url?.includes('/login')
+      
+      if (!isAdminRoute && !isLoginRoute) {
+        localStorage.removeItem('token')
+        // Optionally redirect to login
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/dev') {
+          window.location.href = '/login'
+        }
       }
     }
     return Promise.reject(error)

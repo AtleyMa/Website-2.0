@@ -5,6 +5,7 @@ from flask_jwt_extended import (
     jwt_required, 
     get_jwt_identity
 )
+import bcrypt
 import random
 import sys
 import os
@@ -86,6 +87,12 @@ def verify_account():
             user_data['email']
         )
         
+        # Hash the password
+        password_hash = bcrypt.hashpw(
+            user_data['password'].encode('utf-8'), 
+            bcrypt.gensalt()
+        ).decode('utf-8')
+        
         # Insert user into database
         customer_id = Database.execute_insert(
             """INSERT INTO customers 
@@ -96,7 +103,7 @@ def verify_account():
                 user_data['lastName'],
                 user_data['phone'],
                 user_data['email'],
-                user_data['password'],  # TODO: Hash password in production
+                password_hash,
                 stripe_id
             )
         )
@@ -141,9 +148,14 @@ def login():
     if not user:
         return jsonify({'message': 'Invalid email or password'}), 401
     
-    # Check password (TODO: Use proper password hashing in production)
-    if user['password'] != password:
-        return jsonify({'message': 'Invalid email or password'}), 401
+    # Verify password with bcrypt
+    try:
+        if not bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
+            return jsonify({'message': 'Invalid email or password'}), 401
+    except Exception:
+        # Handle legacy plain-text passwords (for migration)
+        if user['password'] != password:
+            return jsonify({'message': 'Invalid email or password'}), 401
     
     # Create JWT token
     token = create_access_token(identity=str(user['customer_id']))
@@ -267,10 +279,16 @@ def reset_password():
     if not stored.get('verified') or stored.get('reset_token') != reset_token:
         return jsonify({'message': 'Invalid reset token'}), 400
     
-    # Update password (TODO: Hash password in production)
+    # Hash the new password
+    password_hash = bcrypt.hashpw(
+        new_password.encode('utf-8'), 
+        bcrypt.gensalt()
+    ).decode('utf-8')
+    
+    # Update password
     Database.execute_update(
         "UPDATE customers SET password = %s WHERE phone = %s",
-        (new_password, phone)
+        (password_hash, phone)
     )
     
     # Clean up

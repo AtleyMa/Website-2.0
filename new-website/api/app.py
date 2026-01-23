@@ -5,6 +5,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
+from datetime import timedelta
 import os
 
 # Load environment variables
@@ -14,14 +15,28 @@ def create_app():
     """Application factory pattern for Flask app"""
     app = Flask(__name__)
     
-    # Configuration
+    # Security Configuration
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', os.getenv('SECRET_KEY'))
     app.config['JWT_TOKEN_LOCATION'] = ['headers']
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 86400  # 24 hours
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
+    app.config['JWT_COOKIE_SECURE'] = True  # Only send cookies over HTTPS
+    app.config['JWT_COOKIE_CSRF_PROTECT'] = True
     
-    # Initialize extensions
-    CORS(app, origins=['http://localhost:3000', 'https://sodakid.ca'], supports_credentials=True)
+    # Session security
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    
+    # Determine environment
+    is_production = os.getenv('FLASK_ENV', 'development') == 'production'
+    
+    # CORS - restrict origins in production
+    allowed_origins = ['https://sodakid.ca', 'https://www.sodakid.ca']
+    if not is_production:
+        allowed_origins.append('http://localhost:3000')
+    
+    CORS(app, origins=allowed_origins, supports_credentials=True)
     JWTManager(app)
     
     # Register blueprints
