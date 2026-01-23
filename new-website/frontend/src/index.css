@@ -1,0 +1,336 @@
+/* SodaKid Global Styles */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Responsive visibility classes */
+.mobile-only {
+  display: block;
+}
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 992px) {
+  .mobile-only {
+    display: none !important;
+  }
+  .desktop-only {
+    display: flex !important;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #87CCD9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6bb8c6;
+}
+
+/* Ant Design overrides for SodaKid theme */
+.ant-layout {
+  background: #f8f9fa;
+}
+
+.ant-layout-header {
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.ant-layout-content {
+  background: #f8f9fa;
+}
+
+.ant-layout-footer {
+  background: #ffffff;
+}
+
+/* Animation utilities */
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.fade-in-delayed {
+  animation: fadeIn 0.6s ease-out 0.2s both;
+}
+
+.scale-in {
+  animation: scaleIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Card hover effects */
+.hover-card {
+  transition: all 0.3s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient backgrounds */
+.gradient-primary {
+  background: linear-gradient(135deg, #87CCD9 0%, #6bb8c6 100%);
+}
+
+.gradient-secondary {
+  background: linear-gradient(135deg, #B8CF37 0%, #a3b82f 100%);
+}
+
+/* Text utilities */
+.text-primary {
+  color: #87CCD9;
+}
+
+.text-secondary {
+  color: #B8CF37;
+}
+
+/* Button transitions */
+.ant-btn {
+  transition: all 0.3s ease;
+}
+
+/* Loading spinner container */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .mobile-center {
+    text-align: center;
+  }
+  
+  .mobile-full-width {
+    width: 100%;
+  }
+}
+
+/* Hero section styles */
+.hero-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5));
+}
+
+/* Calendar day styles */
+.calendar-day {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.calendar-day:hover:not(.disabled) {
+  background-color: rgba(135, 204, 217, 0.3) !important;
+  transform: scale(1.05);
+}
+
+.calendar-day.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.calendar-day.today {
+  border: 2px solid #B8CF37;
+}
+
+.calendar-day.selected {
+  background-color: #87CCD9 !important;
+  color: white;
+}
+
+/* Form styles */
+.form-container {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 40px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Canister images */
+.canister-image {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.canister-image:hover {
+  transform: scale(1.1);
+}
+
+.canister-image.selected {
+  transform: scale(1.15);
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
+}
+
+/* Feature cards */
+.feature-card {
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Stripe elements */
+.stripe-element {
+  padding: 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  background: white;
+  transition: border-color 0.3s ease;
+}
+
+.stripe-element:focus-within {
+  border-color: #87CCD9;
+  box-shadow: 0 0 0 2px rgba(135, 204, 217, 0.2);
+}
+
+/* Smooth hover transitions for all interactive elements */
+a, button, .ant-btn, .ant-card {
+  transition: all 0.2s ease;
+}
+
+/* Enhanced card hover */
+.ant-card:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+/* Google button styling */
+.google-btn {
+  background: white !important;
+  border: 1px solid #dadce0 !important;
+  color: #3c4043 !important;
+  font-weight: 500 !important;
+}
+
+.google-btn:hover {
+  background: #f8f9fa !important;
+  border-color: #dadce0 !important;
+}
+
+/* Section reveal animation */
+.reveal-section {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s ease-out;
+}
+
+.reveal-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Smooth page transitions */
+.page-transition {
+  animation: pageSlideIn 0.4s ease-out;
+}
+
+@keyframes pageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Carousel dot styling */
+.ant-carousel .slick-dots li button {
+  background: rgba(255,255,255,0.5) !important;
+}
+
+.ant-carousel .slick-dots li.slick-active button {
+  background: white !important;
+}
+
+/* Menu item transitions */
+.ant-menu-horizontal > .ant-menu-item {
+  transition: all 0.3s ease;
+}
+
+/* Focus states for accessibility */
+.ant-btn:focus-visible,
+.ant-input:focus-visible {
+  outline: 2px solid #87CCD9;
+  outline-offset: 2px;
+}

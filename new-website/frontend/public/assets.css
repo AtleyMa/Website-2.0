@@ -1,0 +1,37 @@
+/* 
+ * SodaKid Public Assets
+ * 
+ * Copy your existing images to this folder:
+ * 
+ * Required images:
+ * - logo.png (your main logo - from Logo-trans.png)
+ * - logo-icon.png (favicon)
+ * 
+ * For the About page:
+ * - images/chewie-and-i.jpg
+ * - images/canister-swap.png
+ * - images/donation-cbc.jpg
+ * - images/carbon-neutral-about.jpg
+ * 
+ * For the Home page carousel:
+ * - images/header-banner.jpg
+ * - images/donation-slide.png
+ * - images/carbon-neutral.png
+ * 
+ * For Place Order page:
+ * - images/blue-canister.png
+ * - images/pink-canister.png
+ * 
+ * Copy from your existing static folder:
+ * - static/Logo-trans.png -> public/logo.png
+ * - static/Small Logo.png -> public/logo-icon.png
+ * - static/Chewie and I.JPG -> public/images/chewie-and-i.jpg
+ * - static/Canister Swap Image.png -> public/images/canister-swap.png
+ * - static/Donation at CBC.jpg -> public/images/donation-cbc.jpg
+ * - static/Carbon-Neutral-About.jpg -> public/images/carbon-neutral-about.jpg
+ * - static/FB_header 21.jpg -> public/images/header-banner.jpg
+ * - static/Donation Slide.png -> public/images/donation-slide.png
+ * - static/Carbon-Neutral.png -> public/images/carbon-neutral.png
+ * - static/blue-canister.png -> public/images/blue-canister.png
+ * - static/pink-canister.png -> public/images/pink-canister.png
+ */
