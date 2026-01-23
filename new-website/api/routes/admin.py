@@ -82,8 +82,7 @@ def get_customers():
         customers = Database.execute_query(
             """SELECT customer_id, f_name, l_name, phone, email, stripe_id 
                FROM customers 
-               ORDER BY customer_id DESC""",
-            fetch_all=True
+               ORDER BY customer_id DESC"""
         )
         return jsonify({'customers': customers or []}), 200
     except Exception as e:
@@ -101,8 +100,7 @@ def get_exchanges():
                       e.num_cans, e.can_type, c.f_name, c.l_name
                FROM exchanges e
                LEFT JOIN customers c ON e.customer_id = c.customer_id
-               ORDER BY e.exchange_id DESC""",
-            fetch_all=True
+               ORDER BY e.exchange_id DESC"""
         )
         return jsonify({'exchanges': exchanges or []}), 200
     except Exception as e:
@@ -118,8 +116,7 @@ def get_messages():
         messages = Database.execute_query(
             """SELECT message_id, f_name, l_name, phone, message 
                FROM messages 
-               ORDER BY message_id DESC""",
-            fetch_all=True
+               ORDER BY message_id DESC"""
         )
         return jsonify({'messages': messages or []}), 200
     except Exception as e:
@@ -135,8 +132,7 @@ def get_sent_messages():
         sent = Database.execute_query(
             """SELECT message_sent_id, message_content, phone 
                FROM message_sent 
-               ORDER BY message_sent_id DESC""",
-            fetch_all=True
+               ORDER BY message_sent_id DESC"""
         )
         return jsonify({'sentMessages': sent or []}), 200
     except Exception as e:

@@ -1,19 +1,21 @@
 # Stripe Payment Service
+# Using exact same setup as the original working project
 import stripe
 import os
 from dotenv import load_dotenv
 
-# Load environment variables with correct path
+# Load environment variables
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config.env'))
 
-# Initialize Stripe with production key
-stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+# Price IDs from env - same as original project
+TERRA_PRICE_ID = os.getenv('STRIPE_PINK_PRICE_ID', 'price_1OZOilJn3PNSsZghHeUuOAwR')
+OG_PRICE_ID = os.getenv('STRIPE_BLUE_PRICE_ID', 'price_1OZOhtJn3PNSsZghJesSah6t')
 
+# Domain from env
 DOMAIN = os.getenv('DOMAIN', 'https://sodakid.ca')
 
-# Price IDs from environment
-BLUE_PRICE_ID = os.getenv('STRIPE_BLUE_PRICE_ID')
-PINK_PRICE_ID = os.getenv('STRIPE_PINK_PRICE_ID')
+# Initialize Stripe with key from env
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 
 class StripeService:
@@ -36,19 +38,20 @@ class StripeService:
     def create_checkout_session(
         stripe_customer_id: str,
         can_type: str,
-        quantity: int,
+        quantity,
         time_slot: str,
         date: str
     ) -> dict:
-        """Create a Stripe Checkout Session"""
+        """Create a Stripe Checkout Session - exact same as original project"""
         try:
-            # Use the same Price IDs as the original project
+            # Same logic as original app.py
             if can_type == "Blue (Original)":
-                price_id = BLUE_PRICE_ID
+                price_id = OG_PRICE_ID
             else:
-                price_id = PINK_PRICE_ID
+                price_id = TERRA_PRICE_ID
             
-            session = stripe.checkout.Session.create(
+            # Exact same checkout session creation as original
+            checkout_session = stripe.checkout.Session.create(
                 customer=stripe_customer_id,
                 submit_type='pay',
                 billing_address_collection='auto',
@@ -59,16 +62,16 @@ class StripeService:
                     },
                 ],
                 mode='payment',
-                success_url=f'{DOMAIN}/success?session_id={{CHECKOUT_SESSION_ID}}',
-                cancel_url=f'{DOMAIN}/cancel',
+                success_url=DOMAIN + '/success?session_id={CHECKOUT_SESSION_ID}',
+                cancel_url=DOMAIN + '/place-order',
             )
             
             return {
-                'session_id': session.id,
-                'checkoutUrl': session.url
+                'session_id': checkout_session.id,
+                'checkoutUrl': checkout_session.url
             }
-        except stripe.error.StripeError as e:
-            print(f"Stripe Error creating checkout session: {e}")
+        except Exception as e:
+            print(f"Stripe Error: {e}")
             raise
     
     @staticmethod
