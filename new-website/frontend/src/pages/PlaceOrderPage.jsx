@@ -207,26 +207,32 @@ const PlaceOrderPage = () => {
             overflow: 'hidden'
           }}>
             {/* Days header */}
-            <Row style={{ background: colors.primary }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(7, 1fr)', 
+              background: colors.primary 
+            }}>
               {days.map(day => (
-                <Col key={day} span={24/7} style={{ 
+                <div key={day} style={{ 
                   textAlign: 'center', 
                   padding: '12px 0',
                   fontWeight: 600,
                   color: 'white'
                 }}>
                   {day}
-                </Col>
+                </div>
               ))}
-            </Row>
+            </div>
 
             {/* Calendar weeks */}
             {weeks.map((week, weekIndex) => (
-              <Row key={weekIndex}>
+              <div key={weekIndex} style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(7, 1fr)' 
+              }}>
                 {week.map((dayData, dayIndex) => (
-                  <Col 
+                  <div 
                     key={dayIndex} 
-                    span={24/7}
                     style={{ 
                       borderTop: `1px solid ${colors.border}`,
                       borderRight: dayIndex < 6 ? `1px solid ${colors.border}` : 'none',
@@ -261,9 +267,9 @@ const PlaceOrderPage = () => {
                         )}
                       </div>
                     )}
-                  </Col>
+                  </div>
                 ))}
-              </Row>
+              </div>
             ))}
           </div>
         )}
