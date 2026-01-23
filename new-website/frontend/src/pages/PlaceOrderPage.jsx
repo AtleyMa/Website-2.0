@@ -571,15 +571,15 @@ const PlaceOrderPage = () => {
             onClick={() => handleTimeSelect('p')}
             style={{ 
               borderRadius: 12,
-              border: `2px solid ${colors.primary}`,
-              background: `linear-gradient(135deg, rgba(135, 204, 217, 0.1) 0%, rgba(135, 204, 217, 0.05) 100%)`
+              border: `2px solid ${colors.secondary}`,
+              background: `linear-gradient(135deg, rgba(184, 207, 55, 0.1) 0%, rgba(184, 207, 55, 0.05) 100%)`
             }}
             bodyStyle={{ padding: 20 }}
           >
             <Row align="middle" justify="space-between">
               <Col>
                 <Space>
-                  <ClockCircleOutlined style={{ fontSize: 20, color: colors.primary }} />
+                  <ClockCircleOutlined style={{ fontSize: 20, color: colors.secondary }} />
                   <div>
                     <Text strong style={{ fontSize: 16 }}>Evening</Text>
                     <Text type="secondary" style={{ display: 'block' }}>5:00 PM - 9:00 PM</Text>
@@ -587,7 +587,7 @@ const PlaceOrderPage = () => {
                 </Space>
               </Col>
               <Col>
-                <CheckCircleFilled style={{ fontSize: 24, color: colors.primary }} />
+                <CheckCircleFilled style={{ fontSize: 24, color: colors.secondary }} />
               </Col>
             </Row>
           </Card>
@@ -600,7 +600,7 @@ const PlaceOrderPage = () => {
           textAlign: 'center'
         }}>
           <Text type="secondary">
-            📍 Pickup Location: 2005 29 Ave SW, Calgary
+            📍 Pickup Location: Marda Loop, Calgary
           </Text>
         </div>
       </Modal>

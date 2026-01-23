@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { 
   Typography, 
   Button, 
@@ -23,6 +23,7 @@ const { Title, Paragraph, Text } = Typography
 
 const HomePage = () => {
   const location = useLocation()
+  const navigate = useNavigate()
   const [showAlert, setShowAlert] = React.useState(null)
 
   useEffect(() => {

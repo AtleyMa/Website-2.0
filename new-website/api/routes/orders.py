@@ -115,15 +115,18 @@ def create_checkout():
     if not all([can_type, quantity, time_slot, date]):
         return jsonify({'message': 'Missing order details'}), 400
     
-    # Get user's Stripe ID
+    # Get user's Stripe ID (user_id from JWT is a string)
     user = Database.execute_query(
         "SELECT stripe_id, phone FROM customers WHERE customer_id = %s",
-        (user_id,),
+        (int(user_id),),
         fetch_one=True
     )
     
-    if not user or not user['stripe_id']:
-        return jsonify({'message': 'User not found or Stripe not configured'}), 400
+    if not user:
+        return jsonify({'message': 'User not found'}), 400
+    
+    if not user.get('stripe_id'):
+        return jsonify({'message': 'Stripe account not configured for this user. Please contact support.'}), 400
     
     # Store order details in session for success callback
     session['pending_order'] = {
