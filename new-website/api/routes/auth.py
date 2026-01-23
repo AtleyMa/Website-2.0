@@ -105,7 +105,7 @@ def verify_account():
         del verification_codes[phone]
         
         # Create JWT token
-        token = create_access_token(identity=customer_id)
+        token = create_access_token(identity=str(customer_id))
         
         return jsonify({
             'token': token,
@@ -146,7 +146,7 @@ def login():
         return jsonify({'message': 'Invalid email or password'}), 401
     
     # Create JWT token
-    token = create_access_token(identity=user['customer_id'])
+    token = create_access_token(identity=str(user['customer_id']))
     
     return jsonify({
         'token': token,

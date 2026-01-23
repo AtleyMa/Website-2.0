@@ -141,7 +141,7 @@ const HomePage = () => {
               type="primary" 
               size="large"
               icon={<ShoppingCartOutlined />}
-              onClick={() => navigate('/order')}
+              onClick={() => navigate('/place-order')}
               style={{ 
                 height: 52,
                 paddingInline: 32,
