@@ -3,7 +3,8 @@ import stripe
 import os
 from dotenv import load_dotenv
 
-load_dotenv(dotenv_path='config.env')
+# Load environment variables with correct path
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config.env'))
 
 # Initialize Stripe with production key
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')

@@ -80,10 +80,9 @@ def get_customers():
     """Get all customers"""
     try:
         customers = Database.execute_query(
-            """SELECT customer_id, f_name, l_name, phone, email, password, 
-                      created_at, stripe_id 
+            """SELECT customer_id, f_name, l_name, phone, email, stripe_id 
                FROM customers 
-               ORDER BY created_at DESC""",
+               ORDER BY customer_id DESC""",
             fetch_all=True
         )
         return jsonify({'customers': customers or []}), 200
@@ -98,10 +97,11 @@ def get_exchanges():
     """Get all exchanges/orders"""
     try:
         exchanges = Database.execute_query(
-            """SELECT exchange_id, customer_id, datetime, exchange_date, 
-                      exchange_time, quantity, canister_type 
-               FROM exchanges 
-               ORDER BY datetime DESC""",
+            """SELECT e.exchange_id, e.customer_id, e.time, e.date, 
+                      e.num_cans, e.can_type, c.f_name, c.l_name
+               FROM exchanges e
+               LEFT JOIN customers c ON e.customer_id = c.customer_id
+               ORDER BY e.exchange_id DESC""",
             fetch_all=True
         )
         return jsonify({'exchanges': exchanges or []}), 200
@@ -116,9 +116,9 @@ def get_messages():
     """Get all contact messages"""
     try:
         messages = Database.execute_query(
-            """SELECT message_id, datetime, f_name, l_name, phone, message 
+            """SELECT message_id, f_name, l_name, phone, message 
                FROM messages 
-               ORDER BY datetime DESC""",
+               ORDER BY message_id DESC""",
             fetch_all=True
         )
         return jsonify({'messages': messages or []}), 200
@@ -133,9 +133,9 @@ def get_sent_messages():
     """Get all sent SMS messages"""
     try:
         sent = Database.execute_query(
-            """SELECT id, datetime, content, phone 
-               FROM sent_messages 
-               ORDER BY datetime DESC""",
+            """SELECT message_sent_id, message_content, phone 
+               FROM message_sent 
+               ORDER BY message_sent_id DESC""",
             fetch_all=True
         )
         return jsonify({'sentMessages': sent or []}), 200
