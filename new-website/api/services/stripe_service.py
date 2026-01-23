@@ -10,11 +10,9 @@ stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 DOMAIN = os.getenv('DOMAIN', 'https://sodakid.ca')
 
-# Price IDs
-PRICE_IDS = {
-    'Blue (Original)': os.getenv('STRIPE_BLUE_PRICE_ID', 'price_1OZOhtJn3PNSsZghJesSah6t'),
-    'Pink (Terra)': os.getenv('STRIPE_PINK_PRICE_ID', 'price_1OZOilJn3PNSsZghHeUuOAwR')
-}
+# Price IDs from environment
+BLUE_PRICE_ID = os.getenv('STRIPE_BLUE_PRICE_ID')
+PINK_PRICE_ID = os.getenv('STRIPE_PINK_PRICE_ID')
 
 
 class StripeService:
@@ -43,28 +41,25 @@ class StripeService:
     ) -> dict:
         """Create a Stripe Checkout Session"""
         try:
-            price_id = PRICE_IDS.get(can_type)
-            if not price_id:
-                raise ValueError(f"Invalid canister type: {can_type}")
+            # Use the same Price IDs as the original project
+            if can_type == "Blue (Original)":
+                price_id = BLUE_PRICE_ID
+            else:
+                price_id = PINK_PRICE_ID
             
             session = stripe.checkout.Session.create(
                 customer=stripe_customer_id,
                 submit_type='pay',
                 billing_address_collection='auto',
-                currency='cad',
-                line_items=[{
-                    'price': price_id,
-                    'quantity': quantity,
-                }],
+                line_items=[
+                    {
+                        'price': price_id,
+                        'quantity': quantity,
+                    },
+                ],
                 mode='payment',
                 success_url=f'{DOMAIN}/success?session_id={{CHECKOUT_SESSION_ID}}',
                 cancel_url=f'{DOMAIN}/cancel',
-                metadata={
-                    'time_slot': time_slot,
-                    'date': date,
-                    'can_type': can_type,
-                    'quantity': quantity
-                }
             )
             
             return {

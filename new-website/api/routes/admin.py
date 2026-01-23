@@ -1,10 +1,15 @@
 # Admin Routes - Secure dashboard endpoints
 from flask import Blueprint, request, jsonify
+from dotenv import load_dotenv
 import os
 import secrets
 import hashlib
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Load environment variables
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config.env'))
+
 from database import Database
 
 admin_bp = Blueprint('admin', __name__)
