@@ -38,28 +38,21 @@ class StripeService:
         time_slot: str,
         date: str
     ) -> dict:
-        """Create a Stripe Checkout Session following quickstart guide"""
+        """Create a Stripe Checkout Session using pre-created Price IDs"""
         try:
-            # Product name based on can type
-            if can_type == "Blue (Original)":
-                product_name = "Blue (Original) CO2 Canister Exchange"
-            else:
-                product_name = "Pink (Terra) CO2 Canister Exchange"
+            # Use pre-created Price IDs
+            price_id = 'price_1OZOilJn3PNSsZghHeUuOAwR' if can_type == 'Pink (Terra)' else 'price_1OZOhtJn3PNSsZghJesSah6t'
             
-            # Create checkout session - simple quickstart approach
             session = stripe.checkout.Session.create(
-                line_items=[{
-                    'price_data': {
-                        'currency': 'cad',
-                        'product_data': {
-                            'name': product_name,
-                        },
-                        'unit_amount': 1000,  # $10.00 in cents
-                    },
-                    'quantity': int(quantity),
-                }],
+                customer=stripe_customer_id,
+                line_items=[
+                    {
+                        'price': price_id,
+                        'quantity': int(quantity),
+                    }
+                ],
                 mode='payment',
-                success_url=DOMAIN + '/success',
+                success_url=DOMAIN + '/success?session_id={CHECKOUT_SESSION_ID}',
                 cancel_url=DOMAIN + '/place-order',
             )
             
