@@ -42,23 +42,32 @@ class StripeService:
         time_slot: str,
         date: str
     ) -> dict:
-        """Create a Stripe Checkout Session - exact same as original project"""
+        """Create a Stripe Checkout Session with single currency (no currency picker)"""
         try:
-            # Same logic as original app.py
+            # Determine product name and price based on can type
             if can_type == "Blue (Original)":
-                price_id = OG_PRICE_ID
+                product_name = "Blue (Original) CO2 Canister Exchange"
             else:
-                price_id = TERRA_PRICE_ID
+                product_name = "Pink (Terra) CO2 Canister Exchange"
             
-            # Exact same checkout session creation as original
+            # Price per canister in cents (CAD) - $10.00 = 1000 cents
+            unit_amount = 1000
+            
+            # Create checkout session with price_data (single currency, no picker)
             checkout_session = stripe.checkout.Session.create(
                 customer=stripe_customer_id,
                 submit_type='pay',
                 billing_address_collection='auto',
                 line_items=[
                     {
-                        'price': price_id,
-                        'quantity': quantity,
+                        'price_data': {
+                            'currency': 'cad',  # Single currency - no currency picker
+                            'product_data': {
+                                'name': product_name,
+                            },
+                            'unit_amount': unit_amount,
+                        },
+                        'quantity': int(quantity),
                     },
                 ],
                 mode='payment',

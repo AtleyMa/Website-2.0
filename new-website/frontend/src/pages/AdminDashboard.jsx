@@ -14,7 +14,6 @@ import {
   Input,
   message,
   Spin,
-  Badge,
   Empty
 } from 'antd'
 import { 
@@ -43,6 +42,7 @@ const AdminDashboard = () => {
   const [exchanges, setExchanges] = useState([])
   const [messages, setMessages] = useState([])
   const [sentMessages, setSentMessages] = useState([])
+  const [searchText, setSearchText] = useState('')
   const [stats, setStats] = useState({
     totalCustomers: 0,
     totalExchanges: 0,
@@ -107,18 +107,16 @@ const AdminDashboard = () => {
       setMessages(messagesRes.data.messages || [])
       setSentMessages(sentRes.data.sentMessages || [])
 
-      // Calculate stats
+      // Calculate stats - use num_cans field and $10 per can
       const totalRevenue = (exchangesRes.data.exchanges || []).reduce(
-        (sum, e) => sum + (e.quantity * 10), 0
+        (sum, e) => sum + ((e.num_cans || 0) * 10), 0
       )
       
       setStats({
         totalCustomers: customersRes.data.customers?.length || 0,
         totalExchanges: exchangesRes.data.exchanges?.length || 0,
         totalRevenue,
-        pendingExchanges: (exchangesRes.data.exchanges || []).filter(
-          e => new Date(e.exchange_date) >= new Date()
-        ).length
+        pendingExchanges: 0 // We don't have proper date format to calculate this
       })
     } catch (error) {
       message.error('Failed to fetch data')
@@ -130,22 +128,16 @@ const AdminDashboard = () => {
     }
   }
 
-  // Table columns
+  // Table columns - matching actual database column names
   const customerColumns = [
     { title: 'ID', dataIndex: 'customer_id', key: 'customer_id', width: 80 },
     { 
       title: 'Name', 
       key: 'name',
-      render: (_, record) => `${record.f_name} ${record.l_name}`
+      render: (_, record) => `${record.f_name || ''} ${record.l_name || ''}`
     },
     { title: 'Phone', dataIndex: 'phone', key: 'phone' },
     { title: 'Email', dataIndex: 'email', key: 'email' },
-    { 
-      title: 'Created', 
-      dataIndex: 'created_at', 
-      key: 'created_at',
-      render: (date) => date ? new Date(date).toLocaleDateString() : '-'
-    },
     { 
       title: 'Stripe ID', 
       dataIndex: 'stripe_id', 
@@ -156,44 +148,41 @@ const AdminDashboard = () => {
 
   const exchangeColumns = [
     { title: 'ID', dataIndex: 'exchange_id', key: 'exchange_id', width: 80 },
-    { title: 'Customer ID', dataIndex: 'customer_id', key: 'customer_id', width: 100 },
     { 
-      title: 'Order Date', 
-      dataIndex: 'datetime', 
-      key: 'datetime',
-      render: (date) => date ? new Date(date).toLocaleString() : '-'
+      title: 'Customer', 
+      key: 'customer',
+      render: (_, record) => `${record.f_name || ''} ${record.l_name || ''}`
     },
     { 
-      title: 'Exchange Date', 
-      dataIndex: 'exchange_date', 
-      key: 'exchange_date',
-      render: (date) => date ? new Date(date).toLocaleDateString() : '-'
+      title: 'Date', 
+      dataIndex: 'date', 
+      key: 'date',
+      render: (date) => date ? date.replace(/_/g, '/') : '-'
     },
-    { title: 'Time Slot', dataIndex: 'exchange_time', key: 'exchange_time' },
+    { 
+      title: 'Time Slot', 
+      dataIndex: 'time', 
+      key: 'time',
+      render: (t) => t === 'a' ? 'Morning (7am-5pm)' : t === 'p' ? 'Evening (5pm-9pm)' : '-'
+    },
     { 
       title: 'Qty', 
-      dataIndex: 'quantity', 
-      key: 'quantity',
-      render: (qty) => <Tag color="blue">{qty}</Tag>
+      dataIndex: 'num_cans', 
+      key: 'num_cans',
+      render: (qty) => <Tag color="blue">{qty || 0}</Tag>
     },
     { 
       title: 'Type', 
-      dataIndex: 'canister_type', 
-      key: 'canister_type',
+      dataIndex: 'can_type', 
+      key: 'can_type',
       render: (type) => (
-        <Tag color={type === 'blue' ? 'blue' : 'pink'}>{type || 'Standard'}</Tag>
+        <Tag color={type?.includes('Blue') ? 'blue' : 'pink'}>{type || '-'}</Tag>
       )
     }
   ]
 
   const messageColumns = [
     { title: 'ID', dataIndex: 'message_id', key: 'message_id', width: 80 },
-    { 
-      title: 'Date', 
-      dataIndex: 'datetime', 
-      key: 'datetime',
-      render: (date) => date ? new Date(date).toLocaleString() : '-'
-    },
     { 
       title: 'Name', 
       key: 'name',
@@ -209,18 +198,12 @@ const AdminDashboard = () => {
   ]
 
   const sentMessageColumns = [
-    { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
-    { 
-      title: 'Date', 
-      dataIndex: 'datetime', 
-      key: 'datetime',
-      render: (date) => date ? new Date(date).toLocaleString() : '-'
-    },
+    { title: 'ID', dataIndex: 'message_sent_id', key: 'message_sent_id', width: 80 },
     { title: 'Phone', dataIndex: 'phone', key: 'phone' },
     { 
       title: 'Content', 
-      dataIndex: 'content', 
-      key: 'content',
+      dataIndex: 'message_content', 
+      key: 'message_content',
       ellipsis: true
     }
   ]
@@ -354,6 +337,13 @@ const AdminDashboard = () => {
 
         {/* Data Tables */}
         <Card style={{ borderRadius: 12 }}>
+          <Input.Search
+            placeholder="Search..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ marginBottom: 16, maxWidth: 300 }}
+            allowClear
+          />
           <Spin spinning={dataLoading}>
             <Tabs
               defaultActiveKey="customers"
@@ -363,14 +353,16 @@ const AdminDashboard = () => {
                   label: (
                     <span>
                       <UserOutlined />
-                      Customers
-                      <Badge count={customers.length} style={{ marginLeft: 8 }} />
+                      Customers ({customers.length})
                     </span>
                   ),
                   children: (
                     <Table
                       columns={customerColumns}
-                      dataSource={customers}
+                      dataSource={customers.filter(c => 
+                        !searchText || 
+                        JSON.stringify(c).toLowerCase().includes(searchText.toLowerCase())
+                      )}
                       rowKey="customer_id"
                       pagination={{ pageSize: 10 }}
                       scroll={{ x: 800 }}
@@ -383,14 +375,16 @@ const AdminDashboard = () => {
                   label: (
                     <span>
                       <ShoppingCartOutlined />
-                      Exchanges
-                      <Badge count={exchanges.length} style={{ marginLeft: 8 }} />
+                      Exchanges ({exchanges.length})
                     </span>
                   ),
                   children: (
                     <Table
                       columns={exchangeColumns}
-                      dataSource={exchanges}
+                      dataSource={exchanges.filter(e => 
+                        !searchText || 
+                        JSON.stringify(e).toLowerCase().includes(searchText.toLowerCase())
+                      )}
                       rowKey="exchange_id"
                       pagination={{ pageSize: 10 }}
                       scroll={{ x: 800 }}
@@ -403,14 +397,16 @@ const AdminDashboard = () => {
                   label: (
                     <span>
                       <MessageOutlined />
-                      Messages
-                      <Badge count={messages.length} style={{ marginLeft: 8 }} />
+                      Messages ({messages.length})
                     </span>
                   ),
                   children: (
                     <Table
                       columns={messageColumns}
-                      dataSource={messages}
+                      dataSource={messages.filter(m => 
+                        !searchText || 
+                        JSON.stringify(m).toLowerCase().includes(searchText.toLowerCase())
+                      )}
                       rowKey="message_id"
                       pagination={{ pageSize: 10 }}
                       scroll={{ x: 600 }}
@@ -423,15 +419,17 @@ const AdminDashboard = () => {
                   label: (
                     <span>
                       <SendOutlined />
-                      Sent SMS
-                      <Badge count={sentMessages.length} style={{ marginLeft: 8 }} />
+                      Sent SMS ({sentMessages.length})
                     </span>
                   ),
                   children: (
                     <Table
                       columns={sentMessageColumns}
-                      dataSource={sentMessages}
-                      rowKey="id"
+                      dataSource={sentMessages.filter(s => 
+                        !searchText || 
+                        JSON.stringify(s).toLowerCase().includes(searchText.toLowerCase())
+                      )}
+                      rowKey="message_sent_id"
                       pagination={{ pageSize: 10 }}
                       scroll={{ x: 600 }}
                       locale={{ emptyText: <Empty description="No sent messages" /> }}
