@@ -3,7 +3,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    command: gunicorn -w 1 -b 0.0.0.0:5000 app:app
+    command: waitress-serve --listen=0.0.0.0:5000 app:app
     env_file:
       - .env.production
     environment:

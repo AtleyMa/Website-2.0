@@ -24,8 +24,8 @@ python-dotenv==1.0.0
 # Security
 Werkzeug==3.0.1
 
-# WSGI Server (for production)
-gunicorn==21.2.0
+# WSGI Server (production, cross-platform)
+waitress==3.0.0
 
 # Scheduler (daily SMS summary)
 APScheduler==3.10.4
