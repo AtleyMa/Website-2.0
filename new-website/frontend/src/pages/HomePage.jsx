@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { 
   Typography, 
   Button, 
@@ -7,8 +6,7 @@ import {
   Col, 
   Card, 
   Space,
-  Divider,
-  Alert
+  Divider
 } from 'antd'
 import { 
   ShoppingCartOutlined, 
@@ -22,32 +20,18 @@ import { colors } from '../theme'
 const { Title, Paragraph, Text } = Typography
 
 const HomePage = () => {
-  const location = useLocation()
   const navigate = useNavigate()
-  const [showAlert, setShowAlert] = React.useState(null)
-
-  useEffect(() => {
-    // Check for flash messages from navigation state
-    if (location.state?.message) {
-      setShowAlert({
-        type: location.state.type || 'success',
-        message: location.state.message
-      })
-      // Clear after 5 seconds
-      setTimeout(() => setShowAlert(null), 5000)
-    }
-  }, [location])
 
   const features = [
     {
       icon: <ShoppingCartOutlined style={{ fontSize: 48, color: colors.primary }} />,
       title: 'Easy Exchange',
-      description: 'Simply order online and exchange your empty canisters for full ones at our convenient dropbox location.'
+      description: 'Simply order online and exchange your empty cylinders for full ones at our convenient dropbox location.'
     },
     {
       icon: <HeartOutlined style={{ fontSize: 48, color: colors.secondary }} />,
       title: 'Support Charity',
-      description: 'For every canister exchanged, $1 goes directly to the Calgary Food Bank.'
+      description: 'For every cylinder exchanged, $1 goes directly to the Calgary Food Bank.'
     },
     {
       icon: <SafetyCertificateOutlined style={{ fontSize: 48, color: colors.primary }} />,
@@ -63,19 +47,6 @@ const HomePage = () => {
 
   return (
     <div className="fade-in">
-      {/* Alert Messages */}
-      {showAlert && (
-        <div style={{ padding: '16px 24px', paddingBottom: 0 }}>
-          <Alert 
-            message={showAlert.message} 
-            type={showAlert.type} 
-            showIcon 
-            closable 
-            onClose={() => setShowAlert(null)}
-          />
-        </div>
-      )}
-
       {/* Hero Section */}
       <div style={{ 
         position: 'relative',
@@ -134,7 +105,7 @@ const HomePage = () => {
             maxWidth: 600,
             margin: '0 auto 32px'
           }}>
-            Save over 50% on every canister exchange. Plus, $1 from each refill goes directly to the Calgary Food Bank.
+            Save over 50% on every cylinder exchange. Plus, $1 from each refill goes directly to the Calgary Food Bank.
           </Paragraph>
           
           <Space size="large" wrap style={{ justifyContent: 'center' }}>
@@ -184,10 +155,10 @@ const HomePage = () => {
               color: colors.textSecondary
             }}
           >
-            Once you have placed your online order, your full canister(s) will be ready for 
-            dropbox pickup. Bring your empty canister(s) and exchange them for full ones 
+            Once you have placed your online order, your full cylinder(s) will be ready for 
+            dropbox pickup. Bring your empty cylinder(s) and exchange them for full ones 
             during your selected time slot. The cost is <Text strong>$10</Text>. For every 
-            canister exchanged, SodaKid donates <Text strong>$1 to charity</Text>.
+            cylinder exchanged, SodaKid donates <Text strong>$1 to charity</Text>.
           </Paragraph>
           <Link to="/place-order">
             <Button 
@@ -304,8 +275,7 @@ const HomePage = () => {
         <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
           <Title level={2}>Ready to Save & Support?</Title>
           <Paragraph style={{ fontSize: 18, color: colors.textSecondary, marginBottom: 32 }}>
-            Join hundreds of families who save money on CO₂ cylinder refills 
-            while supporting their community.
+            Join hundreds who save money on CO₂ cylinder refills while supporting their community.
           </Paragraph>
           <Space size="large" wrap style={{ justifyContent: 'center' }}>
             <Link to="/place-order">

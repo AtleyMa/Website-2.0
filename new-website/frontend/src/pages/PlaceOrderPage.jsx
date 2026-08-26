@@ -17,9 +17,7 @@ import {
 } from 'antd'
 import { 
   LeftOutlined, 
-  RightOutlined,
-  CheckCircleFilled,
-  ClockCircleOutlined
+  RightOutlined
 } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { ordersAPI } from '../services/api'
@@ -37,8 +35,7 @@ const PlaceOrderPage = () => {
   const [canisterType, setCanisterType] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [selectedDate, setSelectedDate] = useState(null)
-  const [selectedTime, setSelectedTime] = useState(null)
-  const [timeModalVisible, setTimeModalVisible] = useState(false)
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false)
   
   // Calendar state
   const [currentMonth, setCurrentMonth] = useState(dayjs())
@@ -67,7 +64,7 @@ const PlaceOrderPage = () => {
     setLoading(false)
   }
 
-  const maxQuantity = canisterType === 'Blue (Original)' ? blueMax : pinkMax
+  const maxQuantity = canisterType === 'Screw-in (Original)' ? blueMax : pinkMax
 
   const handleCanisterSelect = async (type) => {
     setCanisterType(type)
@@ -90,17 +87,15 @@ const PlaceOrderPage = () => {
 
   const handleDateSelect = (date) => {
     setSelectedDate(date)
-    setTimeModalVisible(true)
+    setConfirmModalVisible(true)
   }
 
-  const handleTimeSelect = async (time) => {
-    setSelectedTime(time)
-    setTimeModalVisible(false)
+  const handleConfirm = async () => {
+    setConfirmModalVisible(false)
     setCheckoutLoading(true)
     
     try {
       const response = await ordersAPI.createCheckoutSession({
-        time,
         date: selectedDate.format('M_D_YYYY'),
         canisterType,
         quantity
@@ -122,6 +117,9 @@ const PlaceOrderPage = () => {
     const endOfMonth = currentMonth.endOf('month')
     const startDay = startOfMonth.day() // 0 = Sunday
     const daysInMonth = endOfMonth.date()
+
+    // Determine availability key for the selected canister type
+    const canKey = canisterType === 'Quick-Connect (Terra)' ? 'pink' : 'blue'
     
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     const weeks = []
@@ -138,13 +136,17 @@ const PlaceOrderPage = () => {
       const isPast = date.isBefore(today, 'day')
       const isToday = date.isSame(today, 'day')
       const isTooLate = isToday && dayjs().hour() >= 22
+      // Each day is a single time slot; mark it full when it reaches the max capacity
+      const booked = availability[canKey]?.[String(day)] || 0
+      const isFull = booked >= maxQuantity
       
       currentWeek.push({
         day,
         date,
         isPast,
         isToday,
-        isDisabled: isPast || isTooLate
+        isFull,
+        isDisabled: isPast || isTooLate || isFull
       })
 
       if (currentWeek.length === 7) {
@@ -187,13 +189,13 @@ const PlaceOrderPage = () => {
         </Row>
 
         <Paragraph style={{ marginBottom: 16, color: colors.textSecondary }}>
-          Click on a date to schedule your canister exchange
+          Click on an available day to schedule your cylinder exchange
         </Paragraph>
 
         {/* Legend */}
         <Space style={{ marginBottom: 16 }}>
           <Badge color={colors.secondary} text="Available" />
-          <Badge color="#ccc" text="Unavailable" />
+          <Badge color="#ccc" text="Full / Unavailable" />
         </Space>
 
         {loading ? (
@@ -265,6 +267,11 @@ const PlaceOrderPage = () => {
                             <Text type="secondary" style={{ fontSize: 11 }}>Today</Text>
                           </div>
                         )}
+                        {dayData.isFull && (
+                          <div style={{ marginTop: 4 }}>
+                            <Text type="secondary" style={{ fontSize: 11 }}>Full</Text>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -279,23 +286,23 @@ const PlaceOrderPage = () => {
 
   const steps = [
     {
-      title: 'Select Canister',
+      title: 'Select Cylinder',
       content: (
         <div style={{ textAlign: 'center', padding: '32px 0' }}>
-          <Title level={3}>Which type of canister would you like to exchange?</Title>
+          <Title level={3}>Which type of cylinder would you like to exchange?</Title>
           <Paragraph style={{ color: colors.textSecondary, marginBottom: 48 }}>
-            Canisters must be exchanged like for like (blue for blue or pink for pink)
+            Carbonation machines use either screw-in or quick-connect cylinders. These two types are not interchangeable, so please choose the one that fits your machine.
           </Paragraph>
 
           <Row gutter={[32, 32]} justify="center">
             <Col xs={24} sm={12} md={10}>
               <Card 
                 hoverable
-                onClick={() => handleCanisterSelect('Blue (Original)')}
-                className={`hover-card ${canisterType === 'Blue (Original)' ? 'selected' : ''}`}
+                onClick={() => handleCanisterSelect('Screw-in (Original)')}
+                className={`hover-card ${canisterType === 'Screw-in (Original)' ? 'selected' : ''}`}
                 style={{ 
                   borderRadius: 20,
-                  border: canisterType === 'Blue (Original)' ? `3px solid ${colors.blue}` : '1px solid #e8e8e8',
+                  border: canisterType === 'Screw-in (Original)' ? `3px solid ${colors.blue}` : '1px solid #e8e8e8',
                   overflow: 'hidden'
                 }}
                 bodyStyle={{ padding: 32 }}
@@ -303,7 +310,7 @@ const PlaceOrderPage = () => {
                 <div style={{ marginBottom: 24 }}>
                   <img 
                     src="/images/blue-canister.png" 
-                    alt="Blue Canister"
+                    alt="Screw-in Cylinder"
                     className="canister-image"
                     style={{ 
                       height: 200, 
@@ -322,10 +329,10 @@ const PlaceOrderPage = () => {
                     fontWeight: 600
                   }}
                 >
-                  Blue (Original)
+                  Screw-in (Original)
                 </Button>
                 <Text type="secondary" style={{ display: 'block', marginTop: 12 }}>
-                  Max {blueMax} canisters per order
+                  Max {blueMax} cylinders per order
                 </Text>
               </Card>
             </Col>
@@ -333,11 +340,11 @@ const PlaceOrderPage = () => {
             <Col xs={24} sm={12} md={10}>
               <Card 
                 hoverable
-                onClick={() => handleCanisterSelect('Pink (Terra)')}
-                className={`hover-card ${canisterType === 'Pink (Terra)' ? 'selected' : ''}`}
+                onClick={() => handleCanisterSelect('Quick-Connect (Terra)')}
+                className={`hover-card ${canisterType === 'Quick-Connect (Terra)' ? 'selected' : ''}`}
                 style={{ 
                   borderRadius: 20,
-                  border: canisterType === 'Pink (Terra)' ? `3px solid ${colors.pink}` : '1px solid #e8e8e8',
+                  border: canisterType === 'Quick-Connect (Terra)' ? `3px solid ${colors.pink}` : '1px solid #e8e8e8',
                   overflow: 'hidden'
                 }}
                 bodyStyle={{ padding: 32 }}
@@ -345,7 +352,7 @@ const PlaceOrderPage = () => {
                 <div style={{ marginBottom: 24 }}>
                   <img 
                     src="/images/pink-canister.png" 
-                    alt="Pink Canister"
+                    alt="Quick-Connect Cylinder"
                     className="canister-image"
                     style={{ 
                       height: 200, 
@@ -364,10 +371,10 @@ const PlaceOrderPage = () => {
                     fontWeight: 600
                   }}
                 >
-                  Pink (Terra)
+                  Quick-Connect (Terra)
                 </Button>
                 <Text type="secondary" style={{ display: 'block', marginTop: 12 }}>
-                  Max {pinkMax} canisters per order
+                  Max {pinkMax} cylinders per order
                 </Text>
               </Card>
             </Col>
@@ -379,7 +386,7 @@ const PlaceOrderPage = () => {
       title: 'Select Quantity',
       content: (
         <div style={{ textAlign: 'center', padding: '32px 0' }}>
-          <Title level={3}>How many canisters would you like to exchange?</Title>
+          <Title level={3}>How many cylinders would you like to exchange?</Title>
           <Paragraph style={{ color: colors.textSecondary, marginBottom: 48 }}>
             Please select a value between 1 and {maxQuantity}
           </Paragraph>
@@ -395,7 +402,7 @@ const PlaceOrderPage = () => {
           >
             <div style={{ marginBottom: 32 }}>
               <Text style={{ fontSize: 18, marginBottom: 16, display: 'block' }}>
-                Number of Canisters
+                Number of Cylinders
               </Text>
               <InputNumber
                 size="large"
@@ -418,7 +425,7 @@ const PlaceOrderPage = () => {
               marginBottom: 24
             }}>
               <Row justify="space-between">
-                <Text>Price per canister:</Text>
+                <Text>Price per cylinder:</Text>
                 <Text strong>$10.00</Text>
               </Row>
               <Divider style={{ margin: '12px 0' }} />
@@ -460,13 +467,13 @@ const PlaceOrderPage = () => {
       )
     },
     {
-      title: 'Select Date & Time',
+      title: 'Select Date',
       content: (
         <div style={{ padding: '32px 0' }}>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <Title level={3}>Choose your exchange date and time</Title>
+            <Title level={3}>Choose your exchange date</Title>
             <Paragraph style={{ color: colors.textSecondary }}>
-              Select a date when you'd like to exchange your canisters
+              Select a day when you'd like to exchange your cylinders
             </Paragraph>
           </div>
 
@@ -511,98 +518,84 @@ const PlaceOrderPage = () => {
         {steps[currentStep].content}
       </div>
 
-      {/* Time Selection Modal */}
+      {/* Confirm Exchange Modal */}
       <Modal
         title={
           <div>
             <Title level={4} style={{ marginBottom: 0 }}>
-              Select Pickup Time
+              Confirm Your Exchange
             </Title>
             <Text type="secondary">
               {selectedDate?.format('dddd, MMMM D, YYYY')}
             </Text>
           </div>
         }
-        open={timeModalVisible}
-        onCancel={() => setTimeModalVisible(false)}
+        open={confirmModalVisible}
+        onCancel={() => setConfirmModalVisible(false)}
         footer={null}
         width={500}
         centered
       >
         <Paragraph style={{ marginBottom: 24 }}>
-          Click on a time block to schedule your canister exchange:
+          Review your exchange details before continuing to payment:
         </Paragraph>
 
-        <Space style={{ marginBottom: 24 }}>
-          <Badge color={colors.secondary} text="Available" />
-          <Badge color="#ccc" text="Booked" />
-        </Space>
-
-        <div style={{ marginBottom: 24 }}>
-          <Card 
-            hoverable
-            onClick={() => handleTimeSelect('a')}
-            style={{ 
-              marginBottom: 16, 
-              borderRadius: 12,
-              border: `2px solid ${colors.secondary}`,
-              background: `linear-gradient(135deg, rgba(184, 207, 55, 0.1) 0%, rgba(184, 207, 55, 0.05) 100%)`
-            }}
-            bodyStyle={{ padding: 20 }}
-          >
-            <Row align="middle" justify="space-between">
-              <Col>
-                <Space>
-                  <ClockCircleOutlined style={{ fontSize: 20, color: colors.secondary }} />
-                  <div>
-                    <Text strong style={{ fontSize: 16 }}>Morning / Afternoon</Text>
-                    <Text type="secondary" style={{ display: 'block' }}>7:00 AM - 5:00 PM</Text>
-                  </div>
-                </Space>
-              </Col>
-              <Col>
-                <CheckCircleFilled style={{ fontSize: 24, color: colors.secondary }} />
-              </Col>
-            </Row>
-          </Card>
-
-          <Card 
-            hoverable
-            onClick={() => handleTimeSelect('p')}
-            style={{ 
-              borderRadius: 12,
-              border: `2px solid ${colors.secondary}`,
-              background: `linear-gradient(135deg, rgba(184, 207, 55, 0.1) 0%, rgba(184, 207, 55, 0.05) 100%)`
-            }}
-            bodyStyle={{ padding: 20 }}
-          >
-            <Row align="middle" justify="space-between">
-              <Col>
-                <Space>
-                  <ClockCircleOutlined style={{ fontSize: 20, color: colors.secondary }} />
-                  <div>
-                    <Text strong style={{ fontSize: 16 }}>Evening</Text>
-                    <Text type="secondary" style={{ display: 'block' }}>5:00 PM - 9:00 PM</Text>
-                  </div>
-                </Space>
-              </Col>
-              <Col>
-                <CheckCircleFilled style={{ fontSize: 24, color: colors.secondary }} />
-              </Col>
-            </Row>
-          </Card>
-        </div>
+        <Card
+          style={{ 
+            background: colors.background,
+            borderRadius: 12,
+            marginBottom: 24
+          }}
+          bodyStyle={{ padding: 20 }}
+        >
+          <Row justify="space-between" style={{ marginBottom: 12 }}>
+            <Text type="secondary">Exchange Day</Text>
+            <Text strong>{selectedDate?.format('MMMM D, YYYY')}</Text>
+          </Row>
+          <Row justify="space-between" style={{ marginBottom: 12 }}>
+            <Text type="secondary">Cylinder Type</Text>
+            <Text strong>{canisterType}</Text>
+          </Row>
+          <Row justify="space-between">
+            <Text type="secondary">Quantity</Text>
+            <Text strong>{quantity} cylinder{quantity > 1 ? 's' : ''}</Text>
+          </Row>
+        </Card>
 
         <div style={{ 
           background: colors.background, 
           padding: 16, 
           borderRadius: 8,
-          textAlign: 'center'
+          textAlign: 'center',
+          marginBottom: 24
         }}>
           <Text type="secondary">
             📍 Pickup Location: Marda Loop, Calgary
           </Text>
         </div>
+
+        <Space style={{ width: '100%' }}>
+          <Button 
+            size="large"
+            onClick={() => setConfirmModalVisible(false)}
+            style={{ flex: 1 }}
+          >
+            Back
+          </Button>
+          <Button 
+            type="primary"
+            size="large"
+            onClick={handleConfirm}
+            style={{ 
+              flex: 2,
+              background: colors.secondary,
+              borderColor: colors.secondary,
+              fontWeight: 500
+            }}
+          >
+            Proceed to Payment
+          </Button>
+        </Space>
       </Modal>
 
       {/* Checkout Loading Overlay */}

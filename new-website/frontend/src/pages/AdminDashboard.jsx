@@ -163,7 +163,7 @@ const AdminDashboard = () => {
       title: 'Time Slot', 
       dataIndex: 'time', 
       key: 'time',
-      render: (t) => t === 'a' ? 'Morning (7am-5pm)' : t === 'p' ? 'Evening (5pm-9pm)' : '-'
+      render: (t) => t === 'day' ? 'All Day' : t === 'a' ? 'Morning' : t === 'p' ? 'Evening' : '-'
     },
     { 
       title: 'Qty', 
@@ -176,7 +176,7 @@ const AdminDashboard = () => {
       dataIndex: 'can_type', 
       key: 'can_type',
       render: (type) => (
-        <Tag color={type?.includes('Blue') ? 'blue' : 'pink'}>{type || '-'}</Tag>
+        <Tag color={type?.includes('Quick-Connect') ? 'pink' : 'blue'}>{type || '-'}</Tag>
       )
     }
   ]

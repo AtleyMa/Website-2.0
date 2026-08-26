@@ -8,7 +8,8 @@ import {
   Card, 
   Divider,
   Alert,
-  Space
+  Space,
+  message
 } from 'antd'
 import { 
   MailOutlined, 
@@ -19,6 +20,7 @@ import {
   ArrowRightOutlined
 } from '@ant-design/icons'
 import { useAuth } from '../context/AuthContext'
+import api from '../services/api'
 import { colors } from '../theme'
 
 const { Title, Text, Paragraph } = Typography
@@ -35,28 +37,37 @@ const LoginPage = () => {
   const showLoginPrompt = location.state?.from === '/place-order'
 
   // Handle Google OAuth callback
+  const oauthHandled = React.useRef(false)
+
   React.useEffect(() => {
     const params = new URLSearchParams(location.search)
-    const token = params.get('token')
+    const code = params.get('code')
     const userName = params.get('user')
     const isNew = params.get('new')
     const oauthError = params.get('error')
 
     if (oauthError) {
       setError('Google login failed. Please try again.')
-    } else if (token && userName) {
-      // Store the token and redirect
-      localStorage.setItem('token', token)
-      if (loginWithToken) {
-        loginWithToken(token)
-      }
-      navigate('/', { 
-        replace: true,
-        state: { 
-          message: isNew ? `Welcome to SodaKid, ${userName}!` : `Welcome back, ${userName}!`, 
-          type: 'success' 
+    } else if (code && userName && !oauthHandled.current) {
+      oauthHandled.current = true
+      const exchangeOAuthCode = async () => {
+        try {
+          const response = await api.post('/auth/oauth-token', { code })
+          const { token } = response.data
+          if (token) {
+            const result = await loginWithToken(token)
+            if (result.success) {
+              message.success(isNew ? `Welcome to SodaKid, ${userName}!` : `Welcome back, ${userName}!`)
+              navigate('/', { replace: true })
+              return
+            }
+          }
+          setError('Google login failed. Please try again.')
+        } catch (err) {
+          setError('Google login failed. Please try again.')
         }
-      })
+      }
+      exchangeOAuthCode()
     }
   }, [location.search, navigate, loginWithToken])
 
@@ -67,10 +78,7 @@ const LoginPage = () => {
     const result = await login(values.email, values.password)
     
     if (result.success) {
-      navigate(from, { 
-        replace: true,
-        state: { message: 'Welcome back!', type: 'success' }
-      })
+      navigate(from, { replace: true })
     } else {
       setError(result.error)
     }

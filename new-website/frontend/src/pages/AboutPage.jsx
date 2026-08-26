@@ -105,7 +105,7 @@ const AboutPage = () => {
 
       <AboutSection
         title="How it Works"
-        text="Once you have placed your order, your full canister(s) will be in the mailbox, available for exchange of your empty canister(s) during your selected timeslot. The cost is $10 and $1 is donated to charity for every canister exchanged."
+        text="Once you have placed your order, your full cylinder(s) will be in the mailbox, available for exchange of your empty cylinder(s) during your selected timeslot. The cost is $10 and $1 is donated to charity for every cylinder exchanged."
         image="/images/canister-swap.png"
         bgColor={colors.primary}
         reverse={true}
@@ -122,7 +122,7 @@ const AboutPage = () => {
 
       <AboutSection
         title="Carbon Neutral"
-        text="SodaKid has offset its carbon emissions from the inception of its business with a carbon credit project. That's 4 tons of CO₂ to date! When you exchange your canisters with SodaKid, your purchase is carbon neutral. We are one step closer to a net-zero future!"
+        text="SodaKid has offset its carbon emissions from the inception of its business with a carbon credit project. That's 4 tons of CO₂ to date! When you exchange your cylinders with SodaKid, your purchase is carbon neutral. We are one step closer to a net-zero future!"
         image="/images/carbon-neutral-about.jpg"
         bgColor={colors.primary}
         reverse={true}

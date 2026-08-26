@@ -1,10 +1,13 @@
 # Contact Routes
-from flask import Blueprint, request, jsonify
-import sys
+import logging
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from flask import Blueprint, request, jsonify
+
 from database import Database
 from services.sms import sms_service
+
+logger = logging.getLogger(__name__)
 
 contact_bp = Blueprint('contact', __name__)
 
@@ -12,7 +15,7 @@ contact_bp = Blueprint('contact', __name__)
 @contact_bp.route('/contact', methods=['POST'])
 def submit_contact():
     """Submit a contact form message"""
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     
     # Validate required fields
     required_fields = ['firstName', 'lastName', 'phone', 'message']
@@ -40,7 +43,6 @@ def submit_contact():
         )
         
         # Send to admin phone (configured in environment)
-        import os
         admin_phone = os.getenv('ADMIN_PHONE', '4038897632')
         sms_service.send_sms(admin_phone, admin_message)
         
@@ -52,6 +54,6 @@ def submit_contact():
         
         return jsonify({'message': 'Message sent successfully'}), 201
         
-    except Exception as e:
-        print(f"Contact form error: {e}")
+    except Exception:
+        logger.exception("Contact form error")
         return jsonify({'message': 'Failed to send message'}), 500

@@ -1,17 +1,25 @@
 # Stripe Payment Service
-# Following Stripe Checkout Quickstart: https://docs.stripe.com/checkout/quickstart
-import stripe
+import logging
 import os
+
+import stripe
 from dotenv import load_dotenv
+
+from constants import QUICK_CONNECT
+
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config.env'))
 
-# Set Stripe API key
-stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+# Set Stripe API key (use test key in development when available)
+is_production = os.getenv('FLASK_ENV', 'development') == 'production'
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY') if is_production else os.getenv('STRIPE_TEST_SECRET_KEY', os.getenv('STRIPE_SECRET_KEY'))
 
 # Domain for redirects
 DOMAIN = os.getenv('DOMAIN', 'https://sodakid.ca')
+if not is_production:
+    DOMAIN = os.getenv('FRONTEND_URL', 'http://localhost:3000')
 
 
 class StripeService:
@@ -26,8 +34,8 @@ class StripeService:
                 email=email
             )
             return customer.id
-        except stripe.error.StripeError as e:
-            print(f"Stripe Error creating customer: {e}")
+        except stripe.StripeError:
+            logger.exception("Stripe error creating customer")
             raise
     
     @staticmethod
@@ -35,13 +43,15 @@ class StripeService:
         stripe_customer_id: str,
         can_type: str,
         quantity,
-        time_slot: str,
         date: str
     ) -> dict:
         """Create a Stripe Checkout Session using pre-created Price IDs"""
         try:
             # Use pre-created Price IDs
-            price_id = 'price_1OZOilJn3PNSsZghHeUuOAwR' if can_type == 'Pink (Terra)' else 'price_1OZOhtJn3PNSsZghJesSah6t'
+            if is_production:
+                price_id = 'price_1OZOilJn3PNSsZghHeUuOAwR' if can_type == QUICK_CONNECT else 'price_1OZOhtJn3PNSsZghJesSah6t'
+            else:
+                price_id = os.getenv('STRIPE_TEST_PRICE_ID', 'price_1OZOORJn3PNSsZghOj5X64uz')
             
             session = stripe.checkout.Session.create(
                 customer=stripe_customer_id,
@@ -59,8 +69,8 @@ class StripeService:
             return {
                 'checkoutUrl': session.url
             }
-        except Exception as e:
-            print(f"Stripe Error: {e}")
+        except Exception:
+            logger.exception("Stripe error creating checkout session")
             raise
     
     @staticmethod
@@ -68,8 +78,8 @@ class StripeService:
         """Retrieve a Stripe Checkout Session"""
         try:
             return stripe.checkout.Session.retrieve(session_id)
-        except stripe.error.StripeError as e:
-            print(f"Stripe Error retrieving session: {e}")
+        except stripe.StripeError:
+            logger.exception("Stripe error retrieving session")
             raise
 
 

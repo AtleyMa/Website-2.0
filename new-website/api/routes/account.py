@@ -1,10 +1,12 @@
 # Account Routes
+import logging
+
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from database import Database
+
+logger = logging.getLogger(__name__)
 
 account_bp = Blueprint('account', __name__)
 
@@ -40,7 +42,7 @@ def get_profile():
 def update_profile():
     """Update user profile information"""
     user_id = get_jwt_identity()
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     
     # Build update query dynamically
     updates = []
@@ -75,7 +77,8 @@ def update_profile():
         
         return jsonify({'message': 'Profile updated successfully'}), 200
         
-    except Exception as e:
+    except Exception:
+        logger.exception("Failed to update profile for user %s", user_id)
         return jsonify({'message': 'Failed to update profile'}), 500
 
 

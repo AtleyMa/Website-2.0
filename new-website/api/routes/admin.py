@@ -1,16 +1,18 @@
 # Admin Routes - Secure dashboard endpoints
-from flask import Blueprint, request, jsonify
-from dotenv import load_dotenv
+import hmac
+import logging
 import os
 import secrets
-import hashlib
-import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from dotenv import load_dotenv
+from flask import Blueprint, request, jsonify
+
+from database import Database
+
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'config.env'))
-
-from database import Database
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -19,11 +21,6 @@ admin_tokens = set()
 
 # Admin password from environment variable
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'SodaKid2024!')
-
-
-def hash_password(password):
-    """Simple password hashing"""
-    return hashlib.sha256(password.encode()).hexdigest()
 
 
 def verify_admin_token(token):
@@ -46,10 +43,10 @@ def require_admin(f):
 @admin_bp.route('/login', methods=['POST'])
 def admin_login():
     """Admin login endpoint"""
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     password = data.get('password', '')
     
-    if password == ADMIN_PASSWORD:
+    if hmac.compare_digest(password, ADMIN_PASSWORD):
         # Generate a secure token
         token = secrets.token_urlsafe(32)
         admin_tokens.add(token)
@@ -86,7 +83,7 @@ def get_customers():
         )
         return jsonify({'customers': customers or []}), 200
     except Exception as e:
-        print(f"Error fetching customers: {e}")
+        logger.exception("Error fetching customers")
         return jsonify({'customers': [], 'error': str(e)}), 200
 
 
@@ -104,7 +101,7 @@ def get_exchanges():
         )
         return jsonify({'exchanges': exchanges or []}), 200
     except Exception as e:
-        print(f"Error fetching exchanges: {e}")
+        logger.exception("Error fetching exchanges")
         return jsonify({'exchanges': [], 'error': str(e)}), 200
 
 
@@ -120,7 +117,7 @@ def get_messages():
         )
         return jsonify({'messages': messages or []}), 200
     except Exception as e:
-        print(f"Error fetching messages: {e}")
+        logger.exception("Error fetching messages")
         return jsonify({'messages': [], 'error': str(e)}), 200
 
 
@@ -136,7 +133,7 @@ def get_sent_messages():
         )
         return jsonify({'sentMessages': sent or []}), 200
     except Exception as e:
-        print(f"Error fetching sent messages: {e}")
+        logger.exception("Error fetching sent messages")
         return jsonify({'sentMessages': [], 'error': str(e)}), 200
 
 
@@ -176,7 +173,7 @@ def get_stats():
             'pendingExchanges': pending['count'] if pending else 0
         }), 200
     except Exception as e:
-        print(f"Error fetching stats: {e}")
+        logger.exception("Error fetching stats")
         return jsonify({
             'totalCustomers': 0,
             'totalExchanges': 0,

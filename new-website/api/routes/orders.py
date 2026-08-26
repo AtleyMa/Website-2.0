@@ -1,12 +1,15 @@
 # Orders Routes
+import logging
+
 from flask import Blueprint, request, jsonify, session
 from flask_jwt_extended import jwt_required, get_jwt_identity
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from constants import SCREW_IN, QUICK_CONNECT, CYLINDER_TYPES, SCREW_IN_MAX, QUICK_CONNECT_MAX
 from database import Database
-from services.stripe_service import stripe_service
 from services.sms import sms_service
+from services.stripe_service import stripe_service
+
+logger = logging.getLogger(__name__)
 
 orders_bp = Blueprint('orders', __name__)
 
@@ -14,7 +17,7 @@ orders_bp = Blueprint('orders', __name__)
 @orders_bp.route('/availability', methods=['GET'])
 @jwt_required()
 def get_availability():
-    """Get canister availability for a given month"""
+    """Get cylinder availability for a given month"""
     month = request.args.get('month', type=int)
     year = request.args.get('year', type=int)
     
@@ -24,33 +27,19 @@ def get_availability():
     # Get exchanges for the month
     date_pattern = f"{month}_%_{year}"
     
-    blue_exchanges = Database.execute_query(
-        """SELECT date, time, num_cans FROM exchanges 
-           WHERE date LIKE %s AND can_type = %s ORDER BY date""",
-        (date_pattern, 'Blue (Original)')
+    exchanges = Database.execute_query(
+        """SELECT date, num_cans, can_type FROM exchanges 
+           WHERE date LIKE %s ORDER BY date""",
+        (date_pattern,)
     )
     
-    pink_exchanges = Database.execute_query(
-        """SELECT date, time, num_cans FROM exchanges 
-           WHERE date LIKE %s AND can_type = %s ORDER BY date""",
-        (date_pattern, 'Pink (Terra)')
-    )
+    # Calculate availability by day (each day is a single time slot)
+    availability = {'blue': {}, 'pink': {}}
     
-    # Calculate availability by day
-    availability = {
-        'blue': {'morning': {}, 'evening': {}},
-        'pink': {'morning': {}, 'evening': {}}
-    }
-    
-    for exchange in blue_exchanges:
+    for exchange in exchanges:
         day = exchange['date'].split('_')[1]
-        time_key = 'morning' if exchange['time'] == 'a' else 'evening'
-        availability['blue'][time_key][day] = availability['blue'][time_key].get(day, 0) + exchange['num_cans']
-    
-    for exchange in pink_exchanges:
-        day = exchange['date'].split('_')[1]
-        time_key = 'morning' if exchange['time'] == 'a' else 'evening'
-        availability['pink'][time_key][day] = availability['pink'][time_key].get(day, 0) + exchange['num_cans']
+        can_key = 'blue' if exchange['can_type'] == SCREW_IN else 'pink'
+        availability[can_key][day] = availability[can_key].get(day, 0) + exchange['num_cans']
     
     return jsonify(availability), 200
 
@@ -58,24 +47,24 @@ def get_availability():
 @orders_bp.route('/canister-type', methods=['POST'])
 @jwt_required()
 def set_canister_type():
-    """Set the canister type for the order"""
-    data = request.get_json()
+    """Set the cylinder type for the order"""
+    data = request.get_json(silent=True) or {}
     can_type = data.get('canType')
     
-    if can_type not in ['Blue (Original)', 'Pink (Terra)']:
-        return jsonify({'message': 'Invalid canister type'}), 400
+    if can_type not in CYLINDER_TYPES:
+        return jsonify({'message': 'Invalid cylinder type'}), 400
     
     # Store in session or return confirmation
     session['can_type'] = can_type
     
-    return jsonify({'message': 'Canister type set', 'canType': can_type}), 200
+    return jsonify({'message': 'Cylinder type set', 'canType': can_type}), 200
 
 
 @orders_bp.route('/quantity', methods=['POST'])
 @jwt_required()
 def set_quantity():
     """Set the quantity for the order"""
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     quantity = data.get('quantity')
     
     # Convert to int if it's a string or validate if already int
@@ -88,11 +77,11 @@ def set_quantity():
         return jsonify({'message': 'Invalid quantity'}), 400
     
     # Validate against max limits
-    can_type = session.get('can_type', 'Blue (Original)')
-    max_qty = 8 if can_type == 'Pink (Terra)' else 24
+    can_type = session.get('can_type', SCREW_IN)
+    max_qty = QUICK_CONNECT_MAX if can_type == QUICK_CONNECT else SCREW_IN_MAX
     
     if quantity > max_qty:
-        return jsonify({'message': f'Maximum {max_qty} canisters allowed'}), 400
+        return jsonify({'message': f'Maximum {max_qty} cylinders allowed'}), 400
     
     session['quantity'] = quantity
     
@@ -104,20 +93,19 @@ def set_quantity():
 def create_checkout():
     """Create a Stripe checkout session"""
     user_id = get_jwt_identity()
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     
     # Get order details
     can_type = data.get('canisterType') or session.get('can_type')
     quantity = data.get('quantity') or session.get('quantity')
-    time_slot = data.get('time')
     date = data.get('date')
     
-    if not all([can_type, quantity, time_slot, date]):
+    if not all([can_type, quantity, date]):
         return jsonify({'message': 'Missing order details'}), 400
     
     # Get user's Stripe ID (user_id from JWT is a string)
     user = Database.execute_query(
-        "SELECT stripe_id, phone FROM customers WHERE customer_id = %s",
+        "SELECT stripe_id, phone, f_name, l_name, email FROM customers WHERE customer_id = %s",
         (int(user_id),),
         fetch_one=True
     )
@@ -126,14 +114,23 @@ def create_checkout():
         return jsonify({'message': 'User not found'}), 400
     
     if not user.get('stripe_id'):
-        return jsonify({'message': 'Stripe account not configured for this user. Please contact support.'}), 400
+        try:
+            full_name = f"{user['f_name']} {user['l_name']}".strip()
+            stripe_id = stripe_service.create_customer(full_name, user['email'])
+            Database.execute_update(
+                "UPDATE customers SET stripe_id = %s WHERE customer_id = %s",
+                (stripe_id, int(user_id))
+            )
+            user['stripe_id'] = stripe_id
+        except Exception:
+            logger.exception("Failed to create Stripe customer for user %s", user_id)
+            return jsonify({'message': 'Stripe account not configured for this user. Please contact support.'}), 400
     
     # Store order details in session for success callback
     session['pending_order'] = {
         'customer_id': user_id,
         'can_type': can_type,
         'quantity': quantity,
-        'time': time_slot,
         'date': date,
         'phone': user['phone']
     }
@@ -144,14 +141,14 @@ def create_checkout():
             stripe_customer_id=user['stripe_id'],
             can_type=can_type,
             quantity=quantity,
-            time_slot=time_slot,
             date=date
         )
         
         return jsonify(checkout), 200
         
-    except Exception as e:
-        return jsonify({'message': str(e)}), 500
+    except Exception:
+        logger.exception("Error creating checkout session")
+        return jsonify({'message': 'Failed to create checkout session'}), 500
 
 
 @orders_bp.route('/confirm', methods=['POST'])
@@ -159,7 +156,7 @@ def create_checkout():
 def confirm_order():
     """Confirm and record the order after successful payment"""
     user_id = get_jwt_identity()
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     
     # Get pending order from session or request
     order = session.get('pending_order') or data
@@ -174,7 +171,7 @@ def confirm_order():
                VALUES (%s, %s, %s, %s, %s)""",
             (
                 user_id,
-                order['time'],
+                'day',
                 order['date'],
                 order['quantity'],
                 order['can_type']
@@ -193,7 +190,6 @@ def confirm_order():
         sms_service.send_order_confirmation(
             order['phone'],
             order_date,
-            order['time'],
             order['can_type']
         )
         
@@ -205,7 +201,8 @@ def confirm_order():
             'exchangeId': exchange_id
         }), 201
         
-    except Exception as e:
+    except Exception:
+        logger.exception("Failed to confirm order")
         return jsonify({'message': 'Failed to confirm order'}), 500
 
 

@@ -1,29 +1,52 @@
 # Authentication Routes
+import hmac
+import logging
+import os
+import secrets
+import time
+
+import bcrypt
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import (
-    create_access_token, 
-    jwt_required, 
+    create_access_token,
+    jwt_required,
     get_jwt_identity
 )
-import bcrypt
-import random
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from database import Database
+from rate_limit import rate_limit
 from services.sms import sms_service
 from services.stripe_service import stripe_service
+
+logger = logging.getLogger(__name__)
 
 auth_bp = Blueprint('auth', __name__)
 
 # In-memory store for verification codes (use Redis in production)
 verification_codes = {}
 
+# In-memory store for OAuth state (CSRF protection) and one-time login codes
+oauth_states = set()
+oauth_login_codes = {}
+
+# Verification code lifetime (seconds)
+VERIFICATION_CODE_TTL = 600
+
+
+def _new_verification_code():
+    """Generate a cryptographically secure 4-digit verification code."""
+    return str(secrets.randbelow(9000) + 1000)
+
+
+def _is_expired(stored):
+    return time.time() > stored.get('expires', 0)
+
 
 @auth_bp.route('/signup', methods=['POST'])
+@rate_limit(5, 300)
 def signup():
     """Begin the signup process"""
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     
     # Validate required fields
     required_fields = ['firstName', 'lastName', 'email', 'phone', 'password']
@@ -42,13 +65,14 @@ def signup():
         return jsonify({'message': 'This email is already registered'}), 409
     
     # Generate verification code
-    code = str(random.randint(1000, 9999))
+    code = _new_verification_code()
     
     # Store verification data temporarily
     verification_codes[data['phone']] = {
         'code': code,
         'type': 'signup',
-        'data': data
+        'data': data,
+        'expires': time.time() + VERIFICATION_CODE_TTL
     }
     
     # Send verification SMS
@@ -61,9 +85,10 @@ def signup():
 
 
 @auth_bp.route('/verify-account', methods=['POST'])
+@rate_limit(10, 300)
 def verify_account():
     """Verify account with SMS code and complete registration"""
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     code = data.get('code')
     phone = data.get('phone')
     
@@ -71,6 +96,10 @@ def verify_account():
         return jsonify({'message': 'Invalid verification session'}), 400
     
     stored = verification_codes[phone]
+    
+    if _is_expired(stored):
+        del verification_codes[phone]
+        return jsonify({'message': 'Verification code expired'}), 400
     
     if stored['code'] != code:
         return jsonify({'message': 'Invalid verification code'}), 400
@@ -130,9 +159,10 @@ def verify_account():
 
 
 @auth_bp.route('/login', methods=['POST'])
+@rate_limit(10, 60)
 def login():
     """Login with email and password"""
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     email = data.get('email')
     password = data.get('password')
     
@@ -148,13 +178,14 @@ def login():
     if not user:
         return jsonify({'message': 'Invalid email or password'}), 401
     
-    # Verify password with bcrypt
-    try:
-        if not bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
+    # Verify password (bcrypt hashes, or legacy plain-text during migration)
+    stored_password = user['password'] or ''
+    if stored_password.startswith('$2'):
+        if not bcrypt.checkpw(password.encode('utf-8'), stored_password.encode('utf-8')):
             return jsonify({'message': 'Invalid email or password'}), 401
-    except Exception:
-        # Handle legacy plain-text passwords (for migration)
-        if user['password'] != password:
+    else:
+        # Legacy plain-text password (migration only) - constant-time comparison
+        if not hmac.compare_digest(stored_password.encode('utf-8'), password.encode('utf-8')):
             return jsonify({'message': 'Invalid email or password'}), 401
     
     # Create JWT token
@@ -201,9 +232,10 @@ def get_current_user():
 
 
 @auth_bp.route('/forgot-password', methods=['POST'])
+@rate_limit(5, 300)
 def forgot_password():
     """Initiate password reset"""
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     phone = data.get('phone')
     
     if not phone:
@@ -220,13 +252,14 @@ def forgot_password():
         return jsonify({'message': 'No account found with this phone number'}), 404
     
     # Generate verification code
-    code = str(random.randint(1000, 9999))
+    code = _new_verification_code()
     
     # Store verification data
     verification_codes[phone] = {
         'code': code,
         'type': 'password-reset',
-        'user_id': user['customer_id']
+        'user_id': user['customer_id'],
+        'expires': time.time() + VERIFICATION_CODE_TTL
     }
     
     # Send verification SMS
@@ -236,9 +269,10 @@ def forgot_password():
 
 
 @auth_bp.route('/verify-phone', methods=['POST'])
+@rate_limit(10, 300)
 def verify_phone():
     """Verify phone for password reset"""
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     code = data.get('code')
     phone = data.get('phone')
     
@@ -247,6 +281,10 @@ def verify_phone():
     
     stored = verification_codes[phone]
     
+    if _is_expired(stored):
+        del verification_codes[phone]
+        return jsonify({'message': 'Verification code expired'}), 400
+    
     if stored['code'] != code:
         return jsonify({'message': 'Invalid verification code'}), 400
     
@@ -254,7 +292,7 @@ def verify_phone():
     verification_codes[phone]['verified'] = True
     
     # Generate reset token
-    reset_token = str(random.randint(100000, 999999))
+    reset_token = str(secrets.randbelow(900000) + 100000)
     verification_codes[phone]['reset_token'] = reset_token
     
     return jsonify({
@@ -264,9 +302,10 @@ def verify_phone():
 
 
 @auth_bp.route('/reset-password', methods=['POST'])
+@rate_limit(10, 300)
 def reset_password():
     """Reset password with verified token"""
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     phone = data.get('phone')
     reset_token = data.get('resetToken')
     new_password = data.get('password')
@@ -275,6 +314,10 @@ def reset_password():
         return jsonify({'message': 'Invalid reset session'}), 400
     
     stored = verification_codes[phone]
+    
+    if _is_expired(stored):
+        del verification_codes[phone]
+        return jsonify({'message': 'Reset session expired'}), 400
     
     if not stored.get('verified') or stored.get('reset_token') != reset_token:
         return jsonify({'message': 'Invalid reset token'}), 400
@@ -299,9 +342,10 @@ def reset_password():
 
 @auth_bp.route('/resend-signup-code', methods=['POST'])
 @auth_bp.route('/resend-reset-code', methods=['POST'])
+@rate_limit(5, 300)
 def resend_code():
     """Resend verification code"""
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     phone = data.get('phone')
     
     if not phone or phone not in verification_codes:
@@ -310,8 +354,9 @@ def resend_code():
     stored = verification_codes[phone]
     
     # Generate new code
-    code = str(random.randint(1000, 9999))
+    code = _new_verification_code()
     verification_codes[phone]['code'] = code
+    verification_codes[phone]['expires'] = time.time() + VERIFICATION_CODE_TTL
     
     # Send new code
     purpose = stored.get('type', 'verification')
@@ -329,19 +374,22 @@ def google_login():
     
     google_client_id = os.getenv('GOOGLE_CLIENT_ID')
     redirect_uri = os.getenv('GOOGLE_REDIRECT_URI', 'http://localhost:5000/api/auth/google/callback')
-    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3002')
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
     
     if not google_client_id:
         # Redirect to login page with error instead of JSON
         return redirect(f'{frontend_url}/login?error=google_not_configured')
+    
+    # Generate a state value to prevent CSRF
+    state = secrets.token_urlsafe(32)
+    oauth_states.add(state)
     
     params = {
         'client_id': google_client_id,
         'redirect_uri': redirect_uri,
         'response_type': 'code',
         'scope': 'openid email profile',
-        'access_type': 'offline',
-        'prompt': 'consent'
+        'state': state
     }
     
     google_auth_url = f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"
@@ -354,13 +402,19 @@ def google_callback():
     import requests
     from flask import redirect
     
-    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3002')
+    frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
     
     code = request.args.get('code')
     error = request.args.get('error')
+    state = request.args.get('state')
     
     if error:
         return redirect(f'{frontend_url}/login?error={error}')
+    
+    # Validate state to prevent CSRF
+    if not state or state not in oauth_states:
+        return redirect(f'{frontend_url}/login?error=invalid_state')
+    oauth_states.discard(state)
     
     if not code:
         return redirect(f'{frontend_url}/login?error=no_code')
@@ -378,7 +432,8 @@ def google_callback():
             'code': code,
             'grant_type': 'authorization_code',
             'redirect_uri': redirect_uri
-        }
+        },
+        timeout=10
     )
     
     if token_response.status_code != 200:
@@ -389,14 +444,20 @@ def google_callback():
     
     # Get user info from Google
     user_info_response = requests.get(
-        'https://www.googleapis.com/oauth2/v2/userinfo',
-        headers={'Authorization': f'Bearer {access_token}'}
+        'https://www.googleapis.com/oauth2/v3/userinfo',
+        headers={'Authorization': f'Bearer {access_token}'},
+        timeout=10
     )
     
     if user_info_response.status_code != 200:
         return redirect(f'{frontend_url}/login?error=user_info_failed')
     
     google_user = user_info_response.json()
+    
+    # Only trust verified emails
+    if not google_user.get('email_verified'):
+        return redirect(f'{frontend_url}/login?error=email_not_verified')
+    
     email = google_user.get('email')
     first_name = google_user.get('given_name', '')
     last_name = google_user.get('family_name', '')
@@ -404,32 +465,74 @@ def google_callback():
     try:
         # Check if user exists
         existing_user = Database.execute_query(
-            "SELECT customer_id, f_name, l_name FROM customers WHERE email = %s",
+            "SELECT customer_id, f_name FROM customers WHERE email = %s",
             (email,),
             fetch_one=True
         )
         
         if existing_user:
-            # User exists, log them in
-            jwt_token = create_access_token(identity=str(existing_user['customer_id']))
-            return redirect(f'{frontend_url}/login?token={jwt_token}&user={existing_user["f_name"]}')
+            user_id = existing_user['customer_id']
+            display_name = existing_user['f_name']
+            is_new = False
         else:
-            # Create new user with Stripe
+            # Create new user with Stripe (password left empty; cannot log in with password)
             stripe_id = stripe_service.create_customer(
                 f'{first_name} {last_name}',
                 email
             )
             
-            # Insert into database
-            customer_id = Database.execute_insert(
+            user_id = Database.execute_insert(
                 """INSERT INTO customers 
                    (f_name, l_name, email, phone, password, stripe_id) 
                    VALUES (%s, %s, %s, %s, %s, %s)""",
-                (first_name, last_name, email, '', 'google_oauth', stripe_id)
+                (first_name, last_name, email, '', '', stripe_id)
             )
-            
-            jwt_token = create_access_token(identity=str(customer_id))
-            return redirect(f'{frontend_url}/login?token={jwt_token}&user={first_name}&new=true')
-    except Exception as e:
-        print(f"Google OAuth DB Error: {e}")
+            display_name = first_name
+            is_new = True
+        
+        # Issue a short-lived, one-time login code instead of exposing the JWT in the URL
+        login_code = secrets.token_urlsafe(32)
+        oauth_login_codes[login_code] = str(user_id)
+        
+        new_param = '&new=true' if is_new else ''
+        return redirect(f'{frontend_url}/login?code={login_code}&user={display_name}{new_param}')
+    except Exception:
+        logger.exception("Google OAuth DB error")
         return redirect(f'{frontend_url}/login?error=database_error')
+
+
+@auth_bp.route('/oauth-token', methods=['POST'])
+@rate_limit(10, 60)
+def oauth_token():
+    """Exchange a one-time OAuth login code for a JWT"""
+    data = request.get_json(silent=True) or {}
+    login_code = data.get('code')
+    
+    if not login_code or login_code not in oauth_login_codes:
+        return jsonify({'message': 'Invalid or expired login code'}), 400
+    
+    user_id = oauth_login_codes.pop(login_code)
+    
+    user = Database.execute_query(
+        """SELECT customer_id, f_name, l_name, email, phone, stripe_id 
+           FROM customers WHERE customer_id = %s""",
+        (user_id,),
+        fetch_one=True
+    )
+    
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+    
+    token = create_access_token(identity=str(user['customer_id']))
+    
+    return jsonify({
+        'token': token,
+        'user': {
+            'id': user['customer_id'],
+            'firstName': user['f_name'],
+            'lastName': user['l_name'],
+            'email': user['email'],
+            'phone': user['phone'],
+            'stripeId': user['stripe_id']
+        }
+    }), 200

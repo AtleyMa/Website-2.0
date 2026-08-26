@@ -92,17 +92,17 @@ const SuccessPage = () => {
             </Title>
             <Paragraph style={{ marginBottom: 0 }}>
               Please arrive at <Text strong>2005 29 Ave SW, Calgary</Text> during 
-              your selected time slot. Your full canisters will be ready for exchange.
+              your selected time slot. Your full cylinders will be ready for exchange.
             </Paragraph>
             
             <Divider />
             
             <Space direction="vertical" size={8}>
               <Text>
-                <Text strong>Blue (Original):</Text> Brown box to the right of the door
+                <Text strong>Screw-in (Original):</Text> Brown box to the right of the door
               </Text>
               <Text>
-                <Text strong>Pink (Terra):</Text> Mailbox to the right of the door
+                <Text strong>Quick-Connect (Terra):</Text> Mailbox to the right of the door
               </Text>
             </Space>
           </Card>

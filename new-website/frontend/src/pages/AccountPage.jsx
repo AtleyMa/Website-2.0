@@ -18,7 +18,6 @@ import {
   UserOutlined, 
   MailOutlined, 
   PhoneOutlined,
-  LockOutlined,
   LogoutOutlined,
   ShoppingCartOutlined
 } from '@ant-design/icons'
@@ -51,7 +50,7 @@ const AccountPage = () => {
 
   const handleLogout = () => {
     logout()
-    navigate('/', { state: { message: 'Logged out successfully', type: 'success' } })
+    navigate('/')
   }
 
   const formatDate = (dateString) => {
@@ -64,7 +63,10 @@ const AccountPage = () => {
   }
 
   const formatTime = (timeCode) => {
-    return timeCode === 'a' ? 'Morning (7AM-5PM)' : 'Evening (5PM-9PM)'
+    if (timeCode === 'day') return 'All Day'
+    if (timeCode === 'a') return 'Morning'
+    if (timeCode === 'p') return 'Evening'
+    return '-'
   }
 
   const columns = [
@@ -75,7 +77,7 @@ const AccountPage = () => {
       render: (text) => formatDate(text)
     },
     {
-      title: 'Time',
+      title: 'Time Slot',
       dataIndex: 'time',
       key: 'time',
       render: (text) => formatTime(text)
@@ -92,7 +94,7 @@ const AccountPage = () => {
       key: 'can_type',
       render: (text) => (
         <Tag 
-          color={text === 'Blue (Original)' ? 'blue' : 'magenta'}
+          color={text === 'Quick-Connect (Terra)' ? 'magenta' : 'blue'}
           style={{ fontWeight: 500 }}
         >
           {text}
@@ -209,24 +211,6 @@ const AccountPage = () => {
                   <div>
                     <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>Phone</Text>
                     <Text strong>{formatPhone(user?.phone)}</Text>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{ 
-                    width: 40, 
-                    height: 40, 
-                    borderRadius: 8,
-                    background: `rgba(135, 204, 217, 0.15)`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <LockOutlined style={{ color: colors.primary, fontSize: 18 }} />
-                  </div>
-                  <div>
-                    <Text type="secondary" style={{ fontSize: 12, display: 'block' }}>Password</Text>
-                    <Text strong>••••••••</Text>
                   </div>
                 </div>
               </Space>

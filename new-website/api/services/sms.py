@@ -1,7 +1,13 @@
 # AWS Services (SNS for SMS)
-import boto3
+import logging
 import os
+
+import boto3
 from dotenv import load_dotenv
+
+from constants import QUICK_CONNECT
+
+logger = logging.getLogger(__name__)
 
 load_dotenv(dotenv_path='config.env')
 
@@ -29,8 +35,8 @@ class SMSService:
                 Message=message
             )
             return True
-        except Exception as e:
-            print(f"SMS Error: {e}")
+        except Exception:
+            logger.exception("SMS error sending to %s", phone_number)
             return False
     
     def send_verification_code(self, phone: str, code: str, purpose: str = 'verification') -> bool:
@@ -42,19 +48,17 @@ class SMSService:
         
         return self.send_sms(phone, message)
     
-    def send_order_confirmation(self, phone: str, order_date: str, time_slot: str, can_type: str) -> bool:
+    def send_order_confirmation(self, phone: str, order_date: str, can_type: str) -> bool:
         """Send order confirmation SMS"""
-        time_desc = "7:00am and 5:00pm" if time_slot == 'a' else "5:00pm and 9:00pm"
-        
-        if can_type == 'Pink (Terra)':
+        if can_type == QUICK_CONNECT:
             instructions = 'in the mailbox to the right of the door.'
         else:
             instructions = 'in the brown box to the right of the door.'
         
         message = (
             f"SodaKid Exchange Confirmation:\n"
-            f"Instructions: Please arrive at 2005 29 Ave SW Calgary between {time_desc} "
-            f"on {order_date} and refer to the instructions {instructions}\n"
+            f"Instructions: Please arrive at 2005 29 Ave SW Calgary during your "
+            f"scheduled day on {order_date} and refer to the instructions {instructions}\n"
             f"Thank you!\nSodaKid"
         )
         

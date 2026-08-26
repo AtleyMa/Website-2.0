@@ -38,9 +38,7 @@ const ResetPasswordPage = () => {
     const result = await resetPassword(values.password)
 
     if (result.success) {
-      navigate('/login', { 
-        state: { message: 'Password reset successfully! Please log in.', type: 'success' }
-      })
+      navigate('/login')
     } else {
       setError(result.error)
     }

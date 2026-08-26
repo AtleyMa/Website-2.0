@@ -75,9 +75,7 @@ const VerifyAccountPage = () => {
     const result = await verifyAccount(verificationCode)
 
     if (result.success) {
-      navigate('/', { 
-        state: { message: 'Account created successfully!', type: 'success' }
-      })
+      navigate('/')
     } else {
       setError(result.error)
       setCode(['', '', '', ''])
