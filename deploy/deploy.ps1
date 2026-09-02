@@ -26,7 +26,12 @@ param(
   [switch]$SkipMigrations
 )
 
-$ErrorActionPreference = 'Stop'
+# Native commands (git, npm, mysql, robocopy) write benign chatter to stderr
+# (e.g. "Already up to date", "npm warn deprecated"). With ErrorActionPreference
+# set to Stop, some PowerShell builds promote that stderr into a FATAL
+# NativeCommandError. So we use 'Continue' and instead explicitly check
+# $LASTEXITCODE after every step - which correctly catches real failures.
+$ErrorActionPreference = 'Continue'
 
 # --- Paths ---------------------------------------------------------------
 # This script lives at <repo>\deploy\deploy.ps1
