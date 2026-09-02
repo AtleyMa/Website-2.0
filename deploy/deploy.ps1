@@ -148,9 +148,16 @@ if (-not (Test-Path $webConfig)) {
 }
 
 # --- 6. Guard: no localhost API URL may exist in the bundle ----------------
+# A correct prod build bakes in '/api' as the base URL. A leaked build has an
+# absolute 'http://localhost:PORT/api'. (A bare 'localhost' can legitimately
+# appear inside a third-party URL-parsing library regex, so match the real
+# fingerprint — 'http://localhost' immediately followed by an optional port
+# and '/api'.)
 Say 'Checking bundle for localhost API leakage...'
-$leak = Select-String -Path (Join-Path $siteDir 'assets\*.js') -Pattern 'http://localhost' -SimpleMatch -ErrorAction SilentlyContinue
-if ($leak) { Fail "Bundle still contains 'http://localhost' - redeploy would break API. Stop." }
+$leak = Get-ChildItem (Join-Path $siteDir 'assets\*.js') -ErrorAction SilentlyContinue |
+  Select-String -Pattern 'http://localhost(:\d+)?/api' -AllMatches
+if ($leak) { Fail "Bundle still contains 'http://localhost(:\d+)?/api' - redeploy would break API. Stop." }
+else { Say 'OK: no localhost API base baked in' }
 
 # --- 7. Restart waitress (backend) ------------------------------------------
 Say 'Restarting waitress backend'
