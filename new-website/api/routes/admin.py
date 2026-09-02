@@ -388,3 +388,24 @@ def get_stats():
             'pickedUpToday': 0,
             'error': str(e)
         }), 200
+
+
+@admin_bp.route('/scheduler', methods=['GET'])
+@require_admin
+def get_scheduler_status():
+    """Report the running state of the background scheduler and its jobs."""
+    try:
+        from scheduler import _scheduler
+        if _scheduler is None:
+            return jsonify({'scheduler': 'not_started', 'jobs': []}), 200
+        jobs = []
+        for job in _scheduler.get_jobs():
+            jobs.append({
+                'id': job.id,
+                'name': job.name,
+                'nextRun': str(job.next_run_time) if job.next_run_time else None,
+            })
+        return jsonify({'scheduler': 'running', 'jobs': jobs}), 200
+    except Exception as e:
+        logger.exception("Error checking scheduler status")
+        return jsonify({'scheduler': 'error', 'jobs': [], 'error': str(e)}), 200

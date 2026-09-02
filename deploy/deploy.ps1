@@ -11,6 +11,7 @@
   - verify the bundle has no localhost API URL baked in
   - restart waitress (backend)
   - health-check /api/health == 2.0.0 and / serves the app; fail loudly
+  - confirm the background scheduler (daily summary + reorder nudges) is live
 
 Run with:
   .\deploy\deploy.ps1   (from repo root)
@@ -147,6 +148,25 @@ try {
   Say 'OK: site root serves the app'
 } catch {
   Fail "Frontend check failed (is IIS up?): $($_.Exception.Message)"
+}
+
+# --- 9. Scheduler check: confirm the background jobs are live ---------------
+# Logs in as admin and reads /api/admin/scheduler (same process as waitress,
+# so this reflects the actual running scheduler, not a second instance).
+$adminPw = Get-ConfigEnv $configEnv 'ADMIN_PASSWORD'
+if ($adminPw) {
+  try {
+    $login = Invoke-RestMethod -Uri 'http://127.0.0.1:5000/api/admin/login' -Method Post -Body ('{"password":"' + $adminPw + '"}') -ContentType 'application/json'
+    $sched = Invoke-RestMethod -Uri 'http://127.0.0.1:5000/api/admin/scheduler' -Headers @{ 'X-Admin-Token' = $login.token }
+    if ($sched.scheduler -ne 'running' -or $sched.jobs.Count -lt 2) {
+      Fail "Scheduler not running correctly. Got: $($sched | ConvertTo-Json -Compress)"
+    }
+    Say "OK: scheduler running. Jobs: $(($sched.jobs | ForEach-Object { $_.id + ' -> ' + $_.nextRun }) -join ', ')"
+  } catch {
+    Fail "Scheduler check failed: $($_.Exception.Message)"
+  }
+} else {
+  Write-Host '[deploy] WARNING: ADMIN_PASSWORD not found in config.env - skipped scheduler check' -ForegroundColor Yellow
 }
 
 Say 'Deploy complete.'
