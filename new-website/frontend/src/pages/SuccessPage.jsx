@@ -1,41 +1,54 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { 
   Typography, 
-  Result, 
   Button, 
   Card,
   Space,
   Divider,
-  Spin
+  Spin,
+  Alert,
+  Table
 } from 'antd'
 import { 
   CheckCircleFilled, 
   HomeOutlined,
   HistoryOutlined
 } from '@ant-design/icons'
+import { ordersAPI } from '../services/api'
 import { colors } from '../theme'
 
 const { Title, Paragraph, Text } = Typography
 
+const fmtDate = (d) => d ? d.replace(/_/g, '/') : '-'
+
 const SuccessPage = () => {
   const [searchParams] = useSearchParams()
   const [loading, setLoading] = useState(true)
-  const [orderDetails, setOrderDetails] = useState(null)
+  const [order, setOrder] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    // In a real app, you'd fetch order details from the session
-    // For now, we'll just show a generic success message
     const sessionId = searchParams.get('session_id')
-    
-    // Simulate loading order details
-    setTimeout(() => {
-      setOrderDetails({
-        date: 'Your selected date',
-        time: 'Your selected time slot'
-      })
+    if (!sessionId) {
+      setError('No order session found.')
       setLoading(false)
-    }, 1000)
+      return
+    }
+
+    ordersAPI.getRecentOrder(sessionId)
+      .then((res) => {
+        setOrder(res.data)
+        setLoading(false)
+      })
+      .catch(() => {
+        // Order may not be recorded yet (webhook latency); try again shortly
+        setTimeout(() => {
+          ordersAPI.getRecentOrder(sessionId)
+            .then((res) => { setOrder(res.data); setLoading(false) })
+            .catch(() => { setError('We couldn\'t load your order details yet.'); setLoading(false) })
+        }, 3000)
+      })
   }, [searchParams])
 
   if (loading) {
@@ -50,6 +63,14 @@ const SuccessPage = () => {
       </div>
     )
   }
+
+  const orderDetailColumns = order ? [
+    { title: 'Exchange Day', dataIndex: 'date', key: 'date', render: (d) => fmtDate(d) },
+    { title: 'Time', dataIndex: 'time', key: 'time' },
+    { title: 'Quantity', dataIndex: 'numCans', key: 'numCans' },
+    { title: 'Cylinder Type', dataIndex: 'canType', key: 'canType' },
+    { title: 'Amount Paid', key: 'amount', render: () => <Text strong>${((order.amountPaid || 0) / 100).toFixed(2)}</Text> }
+  ] : []
 
   return (
     <div className="fade-in" style={{ padding: '48px 24px' }}>
@@ -78,6 +99,39 @@ const SuccessPage = () => {
               Thank you for your order. A confirmation has been sent to your phone.
             </Paragraph>
           </div>
+
+          {error && (
+            <Alert
+              type="warning"
+              showIcon
+              message={error}
+              description="Your order is confirmed on our side, but the details may still be syncing. Check your order history shortly."
+              style={{ marginBottom: 24, textAlign: 'left' }}
+            />
+          )}
+
+          {order && (
+            <Card 
+              style={{ 
+                background: colors.background,
+                borderRadius: 16,
+                marginBottom: 32,
+                textAlign: 'left'
+              }}
+              bodyStyle={{ padding: 24 }}
+            >
+              <Title level={5} style={{ marginBottom: 16 }}>
+                📋 Order Details
+              </Title>
+              <Table
+                columns={orderDetailColumns}
+                dataSource={[order]}
+                rowKey="exchangeId"
+                pagination={false}
+                size="small"
+              />
+            </Card>
+          )}
 
           <Card 
             style={{ 

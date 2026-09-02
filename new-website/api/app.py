@@ -48,12 +48,14 @@ def create_app():
     from routes.contact import contact_bp
     from routes.account import account_bp
     from routes.admin import admin_bp
+    from routes.webhooks import webhooks_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(orders_bp, url_prefix='/api/orders')
     app.register_blueprint(contact_bp, url_prefix='/api')
     app.register_blueprint(account_bp, url_prefix='/api/account')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    app.register_blueprint(webhooks_bp, url_prefix='/api/webhooks')
 
     # Health check endpoint
     @app.route('/api/health')
@@ -70,15 +72,18 @@ def create_app():
             response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
         return response
 
+    # Start the daily SMS scheduler in any serving process. Werkzeug's debug
+    # reloader parent sets WERKZEUG_RUN_MAIN=false, so it is skipped there to
+    # avoid duplicate jobs; every other entry point (dev reloader child,
+    # `python app.py`, `waitress-serve app:app`) starts it.
+    if os.environ.get('WERKZEUG_RUN_MAIN', 'true') != 'false':
+        from scheduler import init_scheduler
+        init_scheduler()
+
     return app
 
 
 app = create_app()
 
 if __name__ == '__main__':
-    # Start the daily SMS scheduler only in the serving process (not the
-    # debug reloader's parent watcher) to avoid duplicate jobs.
-    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-        from scheduler import init_scheduler
-        init_scheduler()
-    app.run(host='0.0.0.0', port=5000, debug=not IS_PRODUCTION)
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', '5000')), debug=not IS_PRODUCTION)

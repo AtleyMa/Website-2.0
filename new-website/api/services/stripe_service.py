@@ -43,16 +43,27 @@ class StripeService:
         stripe_customer_id: str,
         can_type: str,
         quantity,
-        date: str
+        date: str,
+        customer_id=None
     ) -> dict:
-        """Create a Stripe Checkout Session using pre-created Price IDs"""
+        """Create a Stripe Checkout Session using pre-created Price IDs."""
         try:
             # Use pre-created Price IDs
             if is_production:
                 price_id = 'price_1OZOilJn3PNSsZghHeUuOAwR' if can_type == QUICK_CONNECT else 'price_1OZOhtJn3PNSsZghJesSah6t'
             else:
                 price_id = os.getenv('STRIPE_TEST_PRICE_ID', 'price_1OZOORJn3PNSsZghOj5X64uz')
-            
+
+            # Embed order details so the webhook can reconstruct the exchange
+            # record without trusting a client session cookie.
+            metadata = {
+                'can_type': can_type,
+                'quantity': str(int(quantity)),
+                'date': date,
+            }
+            if customer_id is not None:
+                metadata['customer_id'] = str(int(customer_id))
+
             session = stripe.checkout.Session.create(
                 customer=stripe_customer_id,
                 line_items=[
@@ -64,13 +75,26 @@ class StripeService:
                 mode='payment',
                 success_url=DOMAIN + '/success?session_id={CHECKOUT_SESSION_ID}',
                 cancel_url=DOMAIN + '/place-order',
+                metadata=metadata,
+                client_reference_id=str(int(customer_id)) if customer_id is not None else None,
             )
-            
+
             return {
-                'checkoutUrl': session.url
+                'checkoutUrl': session.url,
+                'sessionId': session.id
             }
         except Exception:
             logger.exception("Stripe error creating checkout session")
+            raise
+
+    @staticmethod
+    def create_refund(payment_intent_id: str) -> str:
+        """Refund a Stripe PaymentIntent and return the refund ID."""
+        try:
+            refund = stripe.Refund.create(payment_intent=payment_intent_id)
+            return refund.id
+        except stripe.StripeError:
+            logger.exception("Stripe error creating refund for %s", payment_intent_id)
             raise
     
     @staticmethod

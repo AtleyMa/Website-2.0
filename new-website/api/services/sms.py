@@ -14,7 +14,7 @@ load_dotenv(dotenv_path='config.env')
 
 class SMSService:
     """Service for sending SMS messages via AWS SNS"""
-    
+
     def __init__(self):
         self.client = boto3.client(
             'sns',
@@ -22,9 +22,20 @@ class SMSService:
             aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
             region_name=os.getenv('AWS_REGION')
         )
-    
-    def send_sms(self, phone_number: str, message: str) -> bool:
-        """Send an SMS message to the specified phone number"""
+
+    def _sms_type_attrs(self, sms_type):
+        """MessageAttributes marking the SMS type for AWS SNS."""
+        return {
+            'AWS.SNS.SMS.SMSType': {
+                'DataType': 'String',
+                'StringValue': sms_type,
+            }
+        }
+
+    def send_sms(self, phone_number: str, message: str, sms_type: str = 'Transactional') -> bool:
+        """Send an SMS message. `sms_type` controls AWS SNS delivery:
+        'Transactional' (customer-facing, high deliverability) or
+        'Promotional' (admin/bulk mailers)."""
         try:
             # Ensure phone number has country code
             if not phone_number.startswith('+'):
@@ -32,7 +43,8 @@ class SMSService:
             
             self.client.publish(
                 PhoneNumber=phone_number,
-                Message=message
+                Message=message,
+                MessageAttributes=self._sms_type_attrs(sms_type)
             )
             return True
         except Exception:

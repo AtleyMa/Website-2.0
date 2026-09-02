@@ -89,7 +89,8 @@ def get_exchanges():
     user_id = get_jwt_identity()
     
     exchanges = Database.execute_query(
-        """SELECT date, time, num_cans, can_type 
+        """SELECT exchange_id, date, time, num_cans, can_type,
+                  COALESCE(status, 'scheduled') as status
            FROM exchanges 
            WHERE customer_id = %s 
            ORDER BY exchange_id DESC""",

@@ -2,6 +2,7 @@
 .env
 *.env
 config.env
+env.production
 .env.local
 .env.development
 .env.production

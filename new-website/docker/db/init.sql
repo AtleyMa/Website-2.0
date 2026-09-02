@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS `exchanges` (
   `time` varchar(50) NOT NULL,
   `num_cans` int(11) NOT NULL,
   `can_type` varchar(50) DEFAULT NULL,
+  `status` varchar(20) DEFAULT 'scheduled',
+  `nudge_sent_at` datetime DEFAULT NULL,
   PRIMARY KEY (`exchange_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
@@ -56,6 +58,11 @@ CREATE TABLE IF NOT EXISTS `payments` (
   `exchange_id` varchar(50) DEFAULT NULL,
   `can_type` varchar(50) DEFAULT NULL,
   `numcans` int(11) DEFAULT NULL,
+  `stripe_session_id` varchar(100) DEFAULT NULL,
+  `stripe_payment_intent_id` varchar(100) DEFAULT NULL,
+  `amount_paid` int(11) DEFAULT NULL,
+  `status` varchar(20) DEFAULT 'paid',
+  `refunded_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`payment_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 

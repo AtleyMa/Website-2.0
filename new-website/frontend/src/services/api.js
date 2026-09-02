@@ -64,6 +64,9 @@ export const ordersAPI = {
   setQuantity: (quantity) => api.post('/orders/quantity', { quantity }),
   createCheckoutSession: (data) => api.post('/orders/create-checkout-session', data),
   getOrderHistory: () => api.get('/orders/history'),
+  cancelOrder: (exchangeId) => api.post(`/orders/${exchangeId}/cancel`),
+  rescheduleOrder: (exchangeId, date) => api.post(`/orders/${exchangeId}/reschedule`, { date }),
+  getRecentOrder: (sessionId) => api.get(`/orders/recent?session_id=${sessionId}`),
 }
 
 // Contact API

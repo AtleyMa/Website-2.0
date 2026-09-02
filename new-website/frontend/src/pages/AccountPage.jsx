@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
   Typography, 
@@ -12,17 +12,24 @@ import {
   Avatar,
   Divider,
   Tag,
-  Empty
+  Empty,
+  Modal,
+  DatePicker,
+  message,
+  Popconfirm
 } from 'antd'
 import { 
   UserOutlined, 
   MailOutlined, 
   PhoneOutlined,
   LogoutOutlined,
-  ShoppingCartOutlined
+  ShoppingCartOutlined,
+  CalendarOutlined,
+  CloseCircleOutlined
 } from '@ant-design/icons'
 import { useAuth } from '../context/AuthContext'
-import { accountAPI } from '../services/api'
+import { accountAPI, ordersAPI } from '../services/api'
+import dayjs from 'dayjs'
 import { colors } from '../theme'
 
 const { Title, Text, Paragraph } = Typography
@@ -32,6 +39,9 @@ const AccountPage = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [exchanges, setExchanges] = useState([])
+  const [rescheduleTarget, setRescheduleTarget] = useState(null)
+  const [rescheduleDate, setRescheduleDate] = useState(null)
+  const [rescheduling, setRescheduling] = useState(false)
 
   useEffect(() => {
     fetchAccountData()
@@ -51,6 +61,44 @@ const AccountPage = () => {
   const handleLogout = () => {
     logout()
     navigate('/')
+  }
+
+  const canModify = (status) => status === 'scheduled' || status === 'ready'
+
+  const handleCancel = async (exchangeId) => {
+    try {
+      await ordersAPI.cancelOrder(exchangeId)
+      message.success('Order cancelled')
+      fetchAccountData()
+    } catch (error) {
+      message.error(error.response?.data?.message || 'Failed to cancel order')
+    }
+  }
+
+  const openReschedule = (record) => {
+    setRescheduleTarget(record)
+    setRescheduleDate(null)
+  }
+
+  const handleReschedule = async () => {
+    if (!rescheduleTarget || !rescheduleDate) {
+      message.error('Please select a new date')
+      return
+    }
+    setRescheduling(true)
+    try {
+      await ordersAPI.rescheduleOrder(
+        rescheduleTarget.exchange_id,
+        rescheduleDate.format('M_D_YYYY')
+      )
+      message.success('Order rescheduled')
+      setRescheduleTarget(null)
+      fetchAccountData()
+    } catch (error) {
+      message.error(error.response?.data?.message || 'Failed to reschedule order')
+    } finally {
+      setRescheduling(false)
+    }
   }
 
   const formatDate = (dateString) => {
@@ -100,6 +148,50 @@ const AccountPage = () => {
           {text}
         </Tag>
       )
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => {
+        const map = {
+          scheduled: ['blue', 'Scheduled'],
+          ready: ['gold', 'Ready'],
+          picked_up: ['green', 'Picked Up'],
+          cancelled: ['red', 'Cancelled']
+        }
+        const [color, label] = map[status] || ['default', status || 'Scheduled']
+        return <Tag color={color}>{label}</Tag>
+      }
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_, record) => {
+        if (!canModify(record.status)) return null
+        return (
+          <Space size={4}>
+            <Button
+              size="small"
+              icon={<CalendarOutlined />}
+              onClick={() => openReschedule(record)}
+            >
+              Reschedule
+            </Button>
+            <Popconfirm
+              title="Cancel this order?"
+              description="Must be at least 24 hours before pickup."
+              okText="Cancel Order"
+              okButtonProps={{ danger: true }}
+              onConfirm={() => handleCancel(record.exchange_id)}
+            >
+              <Button size="small" icon={<CloseCircleOutlined />} danger>
+                Cancel
+              </Button>
+            </Popconfirm>
+          </Space>
+        )
+      }
     }
   ]
 
@@ -271,7 +363,7 @@ const AccountPage = () => {
                         No recent exchanges to show.
                       </Paragraph>
                       <Text type="secondary">
-                        Looks like you're a brand new customer!
+                        Looks like you&apos;re a brand new customer!
                       </Text>
                     </div>
                   }
@@ -290,6 +382,39 @@ const AccountPage = () => {
           </Col>
         </Row>
       </div>
+
+      {/* Reschedule Modal */}
+      <Modal
+        title="Reschedule Order"
+        open={!!rescheduleTarget}
+        onOk={handleReschedule}
+        onCancel={() => setRescheduleTarget(null)}
+        okText="Reschedule"
+        confirmLoading={rescheduling}
+        okButtonProps={{ disabled: !rescheduleDate }}
+      >
+        {rescheduleTarget && (
+          <div style={{ marginBottom: 16 }}>
+            <Text type="secondary">
+              Current date: <Text strong>{formatDate(rescheduleTarget.date)}</Text>
+            </Text>
+            <br />
+            <Text type="secondary">
+              {rescheduleTarget.num_cans} × {rescheduleTarget.can_type}
+            </Text>
+          </div>
+        )}
+        <DatePicker
+          disabledDate={(current) => current && current < dayjs().startOf('day')}
+          onChange={setRescheduleDate}
+          style={{ width: '100%' }}
+          placeholder="Select new date"
+        />
+        <Paragraph type="secondary" style={{ marginTop: 12, fontSize: 12 }}>
+          You can reschedule scheduled or ready orders to any future date,
+          subject to availability.
+        </Paragraph>
+      </Modal>
     </div>
   )
 }
