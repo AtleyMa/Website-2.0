@@ -58,8 +58,9 @@ function Get-ConfigEnv([string]$file, [string]$key) {
 if (-not $SkipPull) {
   Say "Pulling latest code on branch $branch"
   Push-Location $repoRoot
-  git checkout $branch 2>&1 | Out-Null
-  git pull
+  git checkout --quiet $branch
+  if ($LASTEXITCODE -ne 0) { Pop-Location; Fail "git checkout $branch failed" }
+  git pull 2>&1 | Out-Host
   if ($LASTEXITCODE -ne 0) { Pop-Location; Fail 'git pull failed' }
   Pop-Location
 }
