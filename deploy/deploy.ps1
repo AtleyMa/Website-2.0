@@ -54,6 +54,27 @@ function Get-ConfigEnv([string]$file, [string]$key) {
   return $null
 }
 
+# Locate the mysql/mariadb CLI. Not always on PATH on Windows; check the
+# standard install locations before giving up.
+function Get-MysqlPath {
+  $cmd = Get-Command mysql -ErrorAction SilentlyContinue
+  if ($cmd) { return $cmd.Source }
+
+  $candidates = @(
+    'C:\Program Files\MariaDB*\bin\mysql.exe',
+    'C:\Program Files\MySQL\MySQL Server*\bin\mysql.exe',
+    'C:\mariadb\bin\mysql.exe',
+    'C:\xampp\mysql\bin\mysql.exe',
+    'C:\wamp64\bin\mariadb*\bin\mysql.exe',
+    'C:\wamp64\bin\mysql\*\bin\mysql.exe'
+  )
+  foreach ($pattern in $candidates) {
+    $found = Get-Item $pattern -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($found) { return $found.FullName }
+  }
+  return $null
+}
+
 # --- 1. Pull latest -------------------------------------------------------
 if (-not $SkipPull) {
   Say "Pulling latest code on branch $branch"
@@ -73,6 +94,9 @@ if (-not $SkipMigrations) {
   if (-not $dbUser -or -not $dbName) { Fail 'DB_USER/DB_NAME missing from api\config.env' }
 
   Say "Applying DB migrations (idempotent) to $dbName"
+  $mysql = Get-MysqlPath
+  if (-not $mysql) { Fail "mysql CLI not found on PATH or standard install locations. Edit deploy.ps1 Get-MysqlPath." }
+  Say "Using mysql at: $mysql"
   $env:MYSQL_PWD = $dbPass
   try {
     $alterSql = @"
@@ -84,7 +108,7 @@ ALTER TABLE payments ADD COLUMN IF NOT EXISTS amount_paid INT DEFAULT NULL;
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'paid';
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS refunded_at TIMESTAMP NULL DEFAULT NULL;
 "@
-    $alterSql | mysql -u $dbUser $dbName
+    $alterSql | & $mysql -u $dbUser $dbName
     if ($LASTEXITCODE -ne 0) { Fail 'DB migration failed (mysql exited non-zero)' }
   } finally {
     Remove-Item Env:MYSQL_PWD -ErrorAction SilentlyContinue
